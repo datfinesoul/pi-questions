@@ -1,0 +1,28 @@
+{
+  "name": "@datfinesoul/pi-questions",
+  "version": "0.1.0",
+  "description": "A Pi extension that asks focused questions with text, single-select, and multi-select answers.",
+  "type": "module",
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Philip Hadviger <613305+datfinesoul@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datfinesoul/pi-questions.git"
+  },
+  "homepage": "https://github.com/datfinesoul/pi-questions#readme",
+  "bugs": { "url": "https://github.com/datfinesoul/pi-questions/issues" },
+  "keywords": ["pi-package", "pi-extension", "questions"],
+  "files": ["extensions/", "src/", "CHANGELOG.md", "LICENSE", "README.md"],
+  "scripts": {
+    "test": "node --test",
+    "check": "node --test",
+    "pack:check": "node scripts/pack-check.mjs"
+  },
+  "pi": { "extensions": ["./extensions/questions/index.ts"] },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "engines": { "node": ">=22.19.0" }
+}

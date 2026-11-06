@@ -1,6 +1,6 @@
 # Pi questions: pros and cons
 
-This local extension copies `extensions/ask-user-question.ts` from `amosblomqvist/pi-config`. It retains the `ask_user_question` tool name. The project loads `pi-questions.ts` through `.pi/settings.json`. This folder is not a submodule or a standardized module.
+This local extension copies `extensions/ask-user-question.ts` from `amosblomqvist/pi-config`. It retains the `ask_user_question` tool name. The project loads the package manifest through `.pi/settings.json`. This repository is an official ACP submodule with shared layout and checks. The README documents the license and initial CI exceptions.
 
 ## Pros
 
@@ -35,4 +35,4 @@ This local extension copies `extensions/ask-user-question.ts` from `amosblomqvis
 
 ## Validation
 
-Run the local regression checks with `node --test pi-questions/pi-questions.test.mjs`. Run `/reload` to load the extension in this project. Interactive terminal behavior still needs a manual check.
+Run the regression checks with `npm --prefix pi-questions test` from the control plane. Run `/reload` to load the extension in this project. Interactive terminal behavior still needs a manual check.
