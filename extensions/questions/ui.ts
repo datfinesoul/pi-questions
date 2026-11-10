@@ -1,7 +1,7 @@
 // Adapted from amosblomqvist/pi-config. See README.md, Attribution.
 import { Editor, type EditorTheme, Key, matchesKey, truncateToWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
 import type { AskOption, DisplayOption, AskAnswer } from "./types.ts";
-import { getOtherLabel, sortAnswers } from "../../src/questions.js";
+import { getOtherLabel, sortAnswers } from "../../src/questions.ts";
 
 function createEditorTheme(theme: any): EditorTheme {
 	return {

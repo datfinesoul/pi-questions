@@ -17,6 +17,15 @@ test('tool guidance requests concise wording without losing decision-critical in
   assert.match(fields.options.items.properties.label.description, /2–6 words/);
   assert.match(fields.options.items.properties.description.description, /one short sentence/);
 });
+test('tool guidance keeps references clear and separates answers from execution approval', () => {
+  const guidance = tool.promptGuidelines.join('\n');
+  assert.match(guidance, /Make each question self-contained/);
+  assert.match(guidance, /use a clear reference and briefly name the proposal/);
+  assert.match(guidance, /Do not rely only on positions/);
+  assert.match(guidance, /authorization only for the action explicitly asked about/);
+  assert.match(guidance, /Selecting an approach does not by itself authorize its execution/);
+  assert.match(guidance, /Cancellation, unavailable UI, and empty text do not imply approval/);
+});
 test('active abort closes every mode and releases the lock', async () => {
   for (const params of [{ question: 'Text?' }, { question: 'Single?', options: [{ label: 'A' }] }, { question: 'Multi?', options: [{ label: 'A' }], multiSelect: true }]) {
     const ctx = ui(); const controller = new AbortController();
