@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeOptions, getOtherLabel, sortAnswers, buildResult, cancelledResult, unavailableResult, withUILock } from "../src/questions.js";
+import { normalizeOptions, getOtherLabel, sortAnswers, buildResult, cancelledResult, unavailableResult, withUILock } from "../src/questions.ts";
 
 test("options trim fields, default values, and omit blank labels", () => {
   assert.deepEqual(normalizeOptions(undefined), []);

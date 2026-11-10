@@ -12,7 +12,7 @@ own Pi config."
 Reference: README.md at f82da563ab05d66729492d64c7ed4e96db3663f3.
 No upstream license file or SPDX license declaration was present when checked.
 This notice does not claim additional permission to relicense upstream code.
-Adapted code is marked in extensions/questions/ and src/questions.js.
+Adapted code is marked in extensions/questions/ and src/questions.ts.
 
 MIT License (original contributions only)
 

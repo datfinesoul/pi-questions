@@ -93,7 +93,7 @@ This license scope is an explicit exception to the ACP module standard. The init
 
 ## Development
 
-The package needs no runtime dependencies beyond the Pi host. It has no build step. Tests and package checks work with npm or pnpm:
+The package needs no runtime dependencies beyond the Pi host. It has no build step. Runtime helpers use `.ts` files so `/reload` can refresh imported logic. Node.js imports these helpers directly in unit tests. Tests and package checks work with npm or pnpm:
 
 ```sh
 npm test

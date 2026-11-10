@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-10
+
+### Changed
+
+- Guide the model to ask self-contained questions with clear references to earlier proposals.
+- Clarify that approach selection alone does not authorize execution. Cancellation, unavailable UI, and empty text do not imply approval.
+
+### Fixed
+
+- Use TypeScript runtime helpers so `/reload` refreshes imported logic instead of retaining cached JavaScript helpers.
+
 ## [0.1.0] - 2026-11-06
 
 ### Added

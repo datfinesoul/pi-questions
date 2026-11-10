@@ -4,7 +4,7 @@ import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import type { AskUserQuestionMode, AskUserQuestionResultDetails } from "./types.ts";
 import { askText, askSingleChoice, askMultiChoice } from "./ui.ts";
-import { normalizeOptions, getOtherLabel, cancelledResult, unavailableResult, buildResult, withUILock } from "../../src/questions.js";
+import { normalizeOptions, getOtherLabel, cancelledResult, unavailableResult, buildResult, withUILock } from "../../src/questions.ts";
 
 const OptionSchema = Type.Object({
 	label: Type.String({
@@ -53,6 +53,8 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Use this tool to ask exactly one clarifying question, missing-requirement question, preference question, or decision question before continuing.",
 		promptGuidelines: [
 			"Ask exactly one question per tool call.",
+			"Make each question self-contained. When referring to an earlier proposal, use a clear reference and briefly name the proposal. Do not rely only on positions such as 'option 2 above'.",
+			"Treat an answer as authorization only for the action explicitly asked about. Selecting an approach does not by itself authorize its execution. Cancellation, unavailable UI, and empty text do not imply approval.",
 			"Use STE100-inspired wording in questions, details, and choices: plain words, active voice, and one idea per sentence. Avoid jargon, filler, and semicolons.",
 			"Keep the question direct, usually 20 words or fewer. Give each choice a short label, usually 2–6 words.",
 			"Omit details unless the user needs them to decide. Prefer 1–2 sentences and at most 40 words in total. Explain only why the decision matters or a key constraint. Do not repeat the question, prior discussion, or choice descriptions.",
