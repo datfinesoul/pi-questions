@@ -26,6 +26,21 @@ test('tool guidance keeps references clear and separates answers from execution 
   assert.match(guidance, /Selecting an approach does not by itself authorize its execution/);
   assert.match(guidance, /Cancellation, unavailable UI, and empty text do not imply approval/);
 });
+test('text questions separate context and label the answer area', async () => {
+  for (const details of [undefined, 'Choose the profile you manage.']) {
+    const ctx = ui();
+    const controller = new AbortController();
+    const pending = tool.execute('text-layout', { question: 'Which profile?', details }, controller.signal, undefined, ctx);
+    await tick();
+    const lines = ctx.component.render(80);
+    const expected = details
+      ? ['Which profile?', '', details, '', 'Your answer']
+      : ['Which profile?', '', 'Your answer'];
+    assert.deepEqual(lines.slice(0, expected.length), expected);
+    controller.abort();
+    await pending;
+  }
+});
 test('active abort closes every mode and releases the lock', async () => {
   for (const params of [{ question: 'Text?' }, { question: 'Single?', options: [{ label: 'A' }] }, { question: 'Multi?', options: [{ label: 'A' }], multiSelect: true }]) {
     const ctx = ui(); const controller = new AbortController();

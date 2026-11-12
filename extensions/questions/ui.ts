@@ -47,7 +47,12 @@ export async function askText(ctx: any, question: string, context: string | unde
 			render(width: number) {
 				const lines: string[] = [];
 				addWrapped(lines, theme.fg("text", question), width);
-				if (context) addWrapped(lines, theme.fg("muted", context), width);
+				if (context) {
+					lines.push("");
+					addWrapped(lines, theme.fg("muted", context), width);
+				}
+				lines.push("");
+				addWrapped(lines, theme.fg("accent", "Your answer"), width);
 				lines.push(...editor.render(width));
 				lines.push(truncateToWidth(theme.fg("dim", "Enter submit • Esc cancel"), width));
 				return lines;
