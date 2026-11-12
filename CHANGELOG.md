@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-12
+
+### Changed
+
+- Add spacing and a “Your answer” heading to separate text questions from the normal editor.
+
 ## [0.1.1] - 2026-11-10
 
 ### Changed
