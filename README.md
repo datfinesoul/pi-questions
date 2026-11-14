@@ -25,6 +25,8 @@ Pi records the package in `.pi/settings.json`. Project packages load only after 
 > [!NOTE]
 > Pi identifies a package by where it was installed from. Installing pi-questions globally and for a project from the same source is fine: the project installation replaces the global one. Installing it from different locations, such as GitHub globally and a local checkout for a project, loads both copies, and Pi does not reconcile them.
 
+Installation scope and the configuration layer are independent. A global installation still reads the configuration of a trusted project, and a project installation writes only its own project. See [Configuration](#configuration).
+
 <details>
 <summary>Install from a local checkout</summary>
 
@@ -71,9 +73,63 @@ Tool arguments:
 
 Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include Other. If a supplied option is named Other, the custom entry becomes Other (custom).
 
+## Configuration
+
+The extension records one decision for each project. A global installation still reads the configuration of a trusted project, and a project installation writes only its own project.
+
+| Layer | Location | Notes |
+| --- | --- | --- |
+| Project | `<project>/.pi/questions.json` | Written at the working directory. Read only after Pi grants project trust. |
+
+The extension creates the file and keeps unknown keys. A missing file means the project has no decision yet.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `decisionRule` | `"on"` or `"off"` | `"on"` records an accepted offer and keeps the rule block in `AGENTS.md` current. `"off"` records a decline and stops later offers. |
+
+Any other value is invalid. The extension reports it with a warning, then offers the rule again.
+
+### Accept or decline the rule
+
+The first interactive session in a project asks whether to register a decision-question rule. The offer arrives before a model turn, so the model does not ask it.
+
+- Accept: the extension adds the rule block to `AGENTS.md` in the working directory and records `"on"`.
+- Decline or cancel: the extension records `"off"` and does not ask again.
+- No dialog-capable UI, or an untrusted project: the extension writes nothing and records nothing. Start an interactive session in a trusted project to get the offer.
+
+Pi loads context files at session start and on `/reload`. The extension shows a notification after it writes the block. Run `/reload` to load the new rule.
+
+### Change the decision
+
+Set `decisionRule` to the other value, or delete the field, to change the outcome.
+
+```json
+{
+  "decisionRule": "on"
+}
+```
+
+Delete the file to make the extension offer the rule again.
+
+### The rule block
+
+The extension owns only the text between two markers:
+
+```markdown
+<!-- pi-questions:decision-rule:start -->
+...
+<!-- pi-questions:decision-rule:end -->
+```
+
+An update replaces that block and leaves other text intact. The extension does not change a file that has one marker but not the other. It reports the damaged markers instead. After a package update, the next session replaces an outdated block and shows a notification.
+
+The block lives in `AGENTS.md` in the working directory. Pi loads a context file from its own directory and from each directory below it. A later session that starts in a subdirectory reads another `AGENTS.md` and does not see the rule. Copy the marked block into the subdirectory file to extend the rule there.
+
 ## How it works
 
-The extension registers one model-only tool and opens a custom component in interactive terminal sessions. RPC, JSON, and print sessions return `unavailable` without opening a dialog. There are no configuration files, background processes, or network requests.
+The extension registers one model-only tool and opens a custom component in interactive terminal sessions. RPC, JSON, and print sessions return `unavailable` without opening a dialog.
+
+On `session_start`, the extension reads the project configuration. It offers the decision-question rule when the project has no decision and no rule block yet. It then writes the block, records the decision, and shows a notification. When the decision is `"on"`, it keeps the owned block current. It writes one project configuration file and one marked block in `AGENTS.md`. It starts no background process and sends no network request.
 
 Results contain model-facing text and structured `details`: `status`, `question`, `context`, `mode`, `answers`, and an optional `message`. Status is `answered`, `cancelled`, or `unavailable`. Answers contain a type, label, and value. Listed options also include a one-based index. Multi-select answers retain option order, followed by custom text.
 

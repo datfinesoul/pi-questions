@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-14
+
+### Added
+
+- Offer a decision-question rule on the first interactive session in a project. The offer needs no model turn.
+- Write and update the rule block in `AGENTS.md` between two markers. An update replaces only the block and leaves other text intact.
+- Record the decision in `.pi/questions.json`. A decline stops later offers in that project.
+- Show a notification after the extension writes the block, so the user can run `/reload`.
+
+### Changed
+
+- Read a project configuration layer. Installation scope and the configuration layer are independent.
 ## [0.2.0] - 2026-11-14
 
 ### Changed

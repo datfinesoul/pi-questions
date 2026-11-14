@@ -17,8 +17,13 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
   const { visibleWidth } = await import(tuiPath);
   const { default: extension } = await jiti.import("../extensions/questions/index.ts");
   let tool;
-  extension({ registerTool(value) { tool = value; } });
+  const events = [];
+  extension({
+    registerTool(value) { tool = value; },
+    on(event) { events.push(event); return () => {}; },
+  });
   assert.equal(tool.name, "ask_user_question");
+  assert.deepEqual(events, ["session_start"]);
   assert.equal(tool.exposure, "model-only");
   const options = [{ label: "First", value: "first", description: "A longer description that wraps on narrow terminals." }];
   const cases = [

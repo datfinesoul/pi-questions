@@ -1,10 +1,64 @@
 // Adapted from amosblomqvist/pi-config. See README.md, Attribution.
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import type { AskUserQuestionMode, AskUserQuestionResultDetails } from "./types.ts";
 import { askText, askSingleChoice, askMultiChoice } from "./ui.ts";
 import { normalizeOptions, getOtherLabel, cancelledResult, unavailableResult, buildResult, withUILock } from "../../src/questions.ts";
+import { hasRuleBlock, installRuleBlock, readConfig, readRuleFile, writeConfig } from "../../src/decision-rule.ts";
+
+const RULE_QUESTION = "Register a decision-question rule in AGENTS.md?";
+const RULE_DETAILS =
+	"The rule goes in this project's AGENTS.md and tells the model to call ask_user_question for open decisions. The extension changes only its own marked block.";
+
+function reportInvalidBlock(ctx: ExtensionContext, path: string) {
+	ctx.ui.notify(
+		`pi-questions: ${path} has one decision-rule marker but not the other. Fix the markers and run /reload.`,
+		"warning",
+	);
+}
+
+async function applyDecisionRule(ctx: ExtensionContext) {
+	const result = await installRuleBlock(ctx.cwd);
+	if (result.action === "invalid") {
+		reportInvalidBlock(ctx, result.path);
+		return;
+	}
+	await writeConfig(ctx.cwd, { decisionRule: "on" });
+	if (result.action !== "unchanged") {
+		const verb = result.action === "replaced" ? "updated in" : "added to";
+		ctx.ui.notify(`Decision rule ${verb} ${result.path}. Run /reload to load it.`, "info");
+	}
+}
+
+// Offer the rule once per project, then keep the extension-owned block current.
+async function reconcileDecisionRule(ctx: ExtensionContext) {
+	if (!ctx.hasUI) return;
+	if (typeof ctx.isProjectTrusted === "function" && ctx.isProjectTrusted() === false) return;
+
+	const config = await readConfig(ctx.cwd);
+	if (config.error) {
+		ctx.ui.notify(`pi-questions: ${config.error}. Fix or delete ${config.path}.`, "warning");
+	}
+
+	const state = config.settings.decisionRule;
+	if (state === "off") return;
+
+	// A block from another copy of the package, or a manual install, means the
+	// user already has the rule. Record the decision and keep the block current.
+	const existing = await readRuleFile(ctx.cwd);
+	if (state === "on" || (existing !== null && hasRuleBlock(existing))) {
+		await applyDecisionRule(ctx);
+		return;
+	}
+
+	const accepted = await withUILock(() => ctx.ui.confirm(RULE_QUESTION, RULE_DETAILS));
+	if (!accepted) {
+		await writeConfig(ctx.cwd, { decisionRule: "off" });
+		return;
+	}
+	await applyDecisionRule(ctx);
+}
 
 const OptionSchema = Type.Object({
 	label: Type.String({
@@ -153,5 +207,13 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			});
 			return new Text(lines.join("\n"), 0, 0);
 		},
+	});
+
+	pi.on("session_start", async (_event, ctx) => {
+		try {
+			await reconcileDecisionRule(ctx);
+		} catch (error) {
+			ctx.ui.notify(`pi-questions: decision-rule setup failed: ${(error as Error).message}`, "error");
+		}
 	});
 }
