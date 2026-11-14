@@ -100,10 +100,6 @@ export function rulePath(cwd: string): string {
   return join(cwd, RULE_FILE);
 }
 
-export async function readRuleFile(cwd: string): Promise<string | null> {
-  return readTextFile(rulePath(cwd));
-}
-
 async function readTextFile(path: string): Promise<string | null> {
   try {
     return await readFile(path, "utf8");

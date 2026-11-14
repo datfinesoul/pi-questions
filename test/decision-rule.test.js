@@ -19,6 +19,7 @@ async function project(seed = {}) {
 function host(cwd, overrides = {}) {
   const notes = [];
   const prompts = [];
+  const statuses = [];
   return {
     hasUI: true,
     mode: "tui",
@@ -26,6 +27,7 @@ function host(cwd, overrides = {}) {
     isProjectTrusted: () => true,
     ui: {
       notify: (message, level) => notes.push({ message, level }),
+      setStatus: (key, text) => statuses.push({ key, text }),
       confirm: async (title, details) => {
         prompts.push({ title, details });
         return true;
@@ -33,6 +35,7 @@ function host(cwd, overrides = {}) {
     },
     notes,
     prompts,
+    statuses,
     ...overrides,
   };
 }
@@ -91,11 +94,14 @@ test("an accepted offer writes the block and records the decision", async () => 
   assert.deepEqual(await readConfigFile(cwd), { decisionRule: "on" });
   assert.deepEqual(ctx.notes.map((note) => note.level), ["info"]);
   assert.match(ctx.notes[0].message, /Run \/reload/);
+  // The footer keeps the hint after Pi overwrites the chat status line on reload.
+  assert.deepEqual(ctx.statuses.at(-1), { key: "pi-questions", text: "Run /reload to load the decision rule" });
 
   const again = host(cwd);
   await start(again);
   assert.equal(again.prompts.length, 0);
   assert.deepEqual(again.notes, []);
+  assert.deepEqual(again.statuses, [{ key: "pi-questions", text: undefined }]);
 });
 
 test("the offer creates AGENTS.md when the project has none", async () => {
@@ -118,11 +124,28 @@ test("a declined offer is remembered and touches no rule file", async () => {
   await start(again);
 });
 
-test("an existing block skips the offer and records the decision", async () => {
-  const cwd = await project({ "AGENTS.md": `# Project\n\n${buildRuleBlock()}\n` });
-  const ctx = host(cwd, { ui: { notify: () => {}, confirm: async () => { throw new Error("must not ask"); } } });
+test("an existing block does not skip the offer and is not duplicated", async () => {
+  const original = `# Project\n\n${buildRuleBlock()}\n`;
+  const cwd = await project({ "AGENTS.md": original });
+  const ctx = host(cwd);
   await start(ctx);
+
+  assert.equal(ctx.prompts.length, 1);
+  assert.equal(await readFile(join(cwd, "AGENTS.md"), "utf8"), original);
   assert.deepEqual(await readConfigFile(cwd), { decisionRule: "on" });
+  assert.deepEqual(ctx.notes.map((note) => note.level), ["info"]);
+  assert.match(ctx.notes[0].message, /already in .*AGENTS\.md\. No reload is needed/);
+  // Nothing was written, so nothing needs a reload.
+  assert.deepEqual(ctx.statuses, [{ key: "pi-questions", text: undefined }]);
+});
+
+test("declining leaves an existing block in place", async () => {
+  const original = `# Project\n\n${buildRuleBlock()}\n`;
+  const cwd = await project({ "AGENTS.md": original });
+  await start(host(cwd, { ui: { notify: () => {}, setStatus: () => {}, confirm: async () => false } }));
+
+  assert.equal(await readFile(join(cwd, "AGENTS.md"), "utf8"), original);
+  assert.deepEqual(await readConfigFile(cwd), { decisionRule: "off" });
 });
 
 test("a recorded decision keeps the owned block current", async () => {

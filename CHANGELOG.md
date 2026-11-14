@@ -10,8 +10,8 @@ All notable changes to this project are documented in this file. The format foll
 
 - Offer a decision-question rule on the first interactive session in a project. The offer needs no model turn and states that it is one-time and how to change the answer later.
 - Write and update the rule block in `AGENTS.md` between two markers. An update replaces only the block and leaves other text intact.
-- Record the decision in `.pi/questions.json`. A decline stops later offers in that project.
-- Show a notification after the extension writes the block, so the user can run `/reload`.
+- Record the decision in `.pi/questions.json`. The file is the only record, so a decline stops later offers in that project and deleting the file brings the offer back.
+- Show a notification and a footer hint after the extension writes the block, so the user can run `/reload`. The footer hint lasts until the next session start, because Pi overwrites the chat status line during a reload.
 
 ### Changed
 

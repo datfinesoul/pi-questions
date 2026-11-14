@@ -5,11 +5,13 @@ import { Type } from "typebox";
 import type { AskUserQuestionMode, AskUserQuestionResultDetails } from "./types.ts";
 import { askText, askSingleChoice, askMultiChoice } from "./ui.ts";
 import { normalizeOptions, getOtherLabel, cancelledResult, unavailableResult, buildResult, withUILock } from "../../src/questions.ts";
-import { hasRuleBlock, installRuleBlock, readConfig, readRuleFile, writeConfig } from "../../src/decision-rule.ts";
+import { installRuleBlock, readConfig, writeConfig } from "../../src/decision-rule.ts";
 
 const RULE_QUESTION = "Register a decision-question rule in AGENTS.md?";
 const RULE_DETAILS =
 	"The extension asks this once for this project. Accept adds a marked rule block to AGENTS.md. Later, edit decisionRule in .pi/questions.json to change the answer, or delete that file to see this prompt again.";
+const STATUS_KEY = "pi-questions";
+const RELOAD_STATUS = "Run /reload to load the decision rule";
 
 function reportInvalidBlock(ctx: ExtensionContext, path: string) {
 	ctx.ui.notify(
@@ -18,23 +20,33 @@ function reportInvalidBlock(ctx: ExtensionContext, path: string) {
 	);
 }
 
-async function applyDecisionRule(ctx: ExtensionContext) {
+async function applyDecisionRule(ctx: ExtensionContext, announceUnchanged: boolean) {
 	const result = await installRuleBlock(ctx.cwd);
 	if (result.action === "invalid") {
 		reportInvalidBlock(ctx, result.path);
 		return;
 	}
 	await writeConfig(ctx.cwd, { decisionRule: "on" });
-	if (result.action !== "unchanged") {
-		const verb = result.action === "replaced" ? "updated in" : "added to";
-		ctx.ui.notify(`Decision rule ${verb} ${result.path}. Run /reload to load it.`, "info");
+	if (result.action === "unchanged") {
+		if (announceUnchanged) {
+			ctx.ui.notify(`The decision rule is already in ${result.path}. No reload is needed.`, "info");
+		}
+		return;
 	}
+	const verb = result.action === "replaced" ? "updated in" : "added to";
+	ctx.ui.notify(`Decision rule ${verb} ${result.path}. Run /reload to load it.`, "info");
+	// Pi replaces the last chat status line with its own reload message, so keep
+	// the hint in the footer until the next session start clears it.
+	ctx.ui.setStatus?.(STATUS_KEY, RELOAD_STATUS);
 }
 
 // Offer the rule once per project, then keep the extension-owned block current.
 async function reconcileDecisionRule(ctx: ExtensionContext) {
 	if (!ctx.hasUI) return;
 	if (typeof ctx.isProjectTrusted === "function" && ctx.isProjectTrusted() === false) return;
+
+	// A reached session start means the rule from the last reload is loaded.
+	ctx.ui.setStatus?.(STATUS_KEY, undefined);
 
 	const config = await readConfig(ctx.cwd);
 	if (config.error) {
@@ -44,20 +56,20 @@ async function reconcileDecisionRule(ctx: ExtensionContext) {
 	const state = config.settings.decisionRule;
 	if (state === "off") return;
 
-	// A block from another copy of the package, or a manual install, means the
-	// user already has the rule. Record the decision and keep the block current.
-	const existing = await readRuleFile(ctx.cwd);
-	if (state === "on" || (existing !== null && hasRuleBlock(existing))) {
-		await applyDecisionRule(ctx);
+	if (state === "on") {
+		await applyDecisionRule(ctx, false);
 		return;
 	}
 
+	// The configuration file is the only record of the decision. A rule block that
+	// is already in the file means an accept writes nothing, not that the offer is
+	// skipped.
 	const accepted = await withUILock(() => ctx.ui.confirm(RULE_QUESTION, RULE_DETAILS));
 	if (!accepted) {
 		await writeConfig(ctx.cwd, { decisionRule: "off" });
 		return;
 	}
-	await applyDecisionRule(ctx);
+	await applyDecisionRule(ctx, true);
 }
 
 const OptionSchema = Type.Object({

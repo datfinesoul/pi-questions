@@ -93,11 +93,13 @@ Any other value is invalid. The extension reports it with a warning, then offers
 
 The first interactive session in a project asks whether to register a decision-question rule. The offer arrives before a model turn, so the model does not ask it.
 
-- Accept: the extension adds the rule block to `AGENTS.md` in the working directory and records `"on"`.
+- Accept: the extension adds the rule block to `AGENTS.md` in the working directory and records `"on"`. When the block is already there and current, the extension changes nothing and says so. No reload is needed in that case.
 - Decline or cancel: the extension records `"off"` and does not ask again.
 - No dialog-capable UI, or an untrusted project: the extension writes nothing and records nothing. Start an interactive session in a trusted project to get the offer.
 
-Pi loads context files at session start and on `/reload`. The extension shows a notification after it writes the block. Run `/reload` to load the new rule.
+The configuration file is the only record of the decision. A rule block that is already in `AGENTS.md` does not skip the offer. An accept reuses that block and writes no duplicate.
+
+Pi loads context files at session start and on `/reload`. The extension shows a notification after it writes the block. Pi replaces the last chat status line with its own reload message, so the extension also sets a footer hint. The hint stays until the next session start, which means the rule is loaded. Run `/reload` to load the new rule.
 
 ### Change the decision
 
