@@ -38,6 +38,7 @@ async function load(url) {
   for (const [statement, specifier] of imports) {
     const resolved = specifier === "@earendil-works/pi-tui" ? tui
       : specifier === "typebox" ? typebox
+      : specifier.startsWith("node:") ? specifier
       : specifier.endsWith(".ts") ? await load(new URL(specifier, url))
       : new URL(specifier, url).href;
     source = source.replace(statement, `from ${JSON.stringify(resolved)}`);
@@ -46,11 +47,23 @@ async function load(url) {
   modules.set(url.href, result);
   return result;
 }
-export async function loadTool() {
+// Register the extension against a host double and return its registrations.
+export async function loadExtension() {
   const module = await import(await load(new URL("../../extensions/questions/index.ts", import.meta.url)));
   let tool;
-  module.default({ registerTool(value) { tool = value; } });
-  return tool;
+  const handlers = new Map();
+  module.default({
+    registerTool(value) { tool = value; },
+    on(event, handler) {
+      if (!handlers.has(event)) handlers.set(event, []);
+      handlers.get(event).push(handler);
+      return () => {};
+    },
+  });
+  return { tool, handlers };
+}
+export async function loadTool() {
+  return (await loadExtension()).tool;
 }
 export const tick = () => new Promise(resolve => setImmediate(resolve));
 export function ui(mode = "tui") {
