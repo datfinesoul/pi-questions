@@ -83,6 +83,9 @@ test("an accepted offer writes the block and records the decision", async () => 
   await start(ctx);
 
   assert.equal(ctx.prompts.length, 1);
+  assert.match(ctx.prompts[0].details, /asks this once for this project/);
+  assert.match(ctx.prompts[0].details, /edit decisionRule in \.pi\/questions\.json/);
+  assert.match(ctx.prompts[0].details, /delete that file to see this prompt again/);
   assert.equal((await readFile(join(cwd, "AGENTS.md"), "utf8")).startsWith("# Project\n\n"), true);
   assert.match(await readFile(join(cwd, "AGENTS.md"), "utf8"), /ask_user_question/);
   assert.deepEqual(await readConfigFile(cwd), { decisionRule: "on" });

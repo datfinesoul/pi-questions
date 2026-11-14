@@ -9,7 +9,7 @@ import { hasRuleBlock, installRuleBlock, readConfig, readRuleFile, writeConfig }
 
 const RULE_QUESTION = "Register a decision-question rule in AGENTS.md?";
 const RULE_DETAILS =
-	"The rule goes in this project's AGENTS.md and tells the model to call ask_user_question for open decisions. The extension changes only its own marked block.";
+	"The extension asks this once for this project. Accept adds a marked rule block to AGENTS.md. Later, edit decisionRule in .pi/questions.json to change the answer, or delete that file to see this prompt again.";
 
 function reportInvalidBlock(ctx: ExtensionContext, path: string) {
 	ctx.ui.notify(

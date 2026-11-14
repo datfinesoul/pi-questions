@@ -8,7 +8,7 @@ All notable changes to this project are documented in this file. The format foll
 
 ### Added
 
-- Offer a decision-question rule on the first interactive session in a project. The offer needs no model turn.
+- Offer a decision-question rule on the first interactive session in a project. The offer needs no model turn and states that it is one-time and how to change the answer later.
 - Write and update the rule block in `AGENTS.md` between two markers. An update replaces only the block and leaves other text intact.
 - Record the decision in `.pi/questions.json`. A decline stops later offers in that project.
 - Show a notification after the extension writes the block, so the user can run `/reload`.
