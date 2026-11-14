@@ -9,7 +9,7 @@ import { normalizeOptions, getOtherLabel, cancelledResult, unavailableResult, bu
 const OptionSchema = Type.Object({
 	label: Type.String({
 		description:
-			'Use a short, plain label, usually 2–6 words. Place the recommended option first. Append "(Recommended)" to its label.',
+			'Use a short, plain label, usually 2–6 words. Do not mark, rank, or order options by preference.',
 	}),
 	value: Type.Optional(
 		Type.String({
@@ -62,8 +62,9 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Preserve essential risks, conditions, uncertainty, and technical names. Use more words when needed for a safe, informed choice. Never truncate text to meet a length target.",
 			"Ask only questions that materially affect the work. Use separate calls for distinct decisions, and avoid unnecessary follow-up questions.",
 			'Users will always be able to select "Other" to provide custom text input when options are provided.',
-			"Use multiSelect: true only when you need multiple answers to the same question.",
-			'If you recommend a specific option, make it the first option in the list and add "(Recommended)" at the end of the label.',
+			"Use multiSelect: true when options are independent and any combination can be valid. Keep options as distinct answers; do not fold their combinations into additional options.",
+			"Express related decisions as separate options in one multi-select, or as separate questions in separate calls. Do not pre-combine decision dimensions into options.",
+			'Present neutral options and let the user analyze them. Do not mark or order options by preference. In details, state only facts: applicable project rules, constraints, and what each option changes.',
 			"Use reasonable defaults for minor choices. Ask when an assumption would materially affect correctness, scope, safety, or user intent.",
 			"Use this tool when multiple valid implementation paths exist and the preferred path depends on user choice.",
 		].map((guideline) => `ask_user_question: ${guideline}`),
