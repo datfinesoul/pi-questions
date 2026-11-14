@@ -1,6 +1,6 @@
 {
   "name": "@datfinesoul/pi-questions",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A Pi extension that asks focused questions with text, single-select, and multi-select answers.",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",

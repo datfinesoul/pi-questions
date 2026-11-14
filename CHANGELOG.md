@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-14
+
+### Changed
+
+- Remove recommendation guidance from `ask_user_question`. Options are now neutral: the tool guidance tells the model not to mark or order options by preference and to state only facts in details, such as project rules, constraints, and what each option changes.
+- Rework multi-select guidance. Use multi-select when options are independent and any combination can be valid. Express related decisions as separate options or separate questions instead of pre-combining decision dimensions into options.
+
 ## [0.1.2] - 2026-11-12
 
 ### Changed
