@@ -57,9 +57,9 @@ pi --no-extensions --extension ./extensions/questions/index.ts
 The model calls `ask_user_question` when missing information or a decision materially affects the work. The extension adds no slash command or global shortcut.
 
 - **Text:** Type an answer. Press Enter to submit or Esc to cancel. Empty text answers are permitted.
-- **Single-select:** Use Up and Down to move. Press Enter to select an option.
+- **Single-select:** Use Up and Down or keys 1–9 to highlight an option. Press Enter to confirm the highlighted option.
 - **Other:** Select Other to enter custom text. Press Enter to submit or Esc to return to the choices. Custom text must not be empty.
-- **Multi-select:** Use Space or Enter to toggle an option. Select Submit and press Enter to submit at least one answer. Other supports one custom answer.
+- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter on a regular option or Submit to submit at least one answer. Enter on Other opens custom text entry.
 - **Cancel:** Press Esc from the choice list to cancel.
 
 Tool arguments:

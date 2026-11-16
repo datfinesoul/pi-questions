@@ -75,6 +75,73 @@ test('already-aborted calls never open', async () => {
   assert.equal((await tool.execute('id', { question: '?' }, controller.signal, undefined, ctx)).details.status, 'cancelled');
   assert.equal(ctx.opens, 0);
 });
+test('number shortcuts highlight single answers and toggle multiple answers', async () => {
+  const options = Array.from({ length: 10 }, (_, i) => ({ label: `Choice ${i + 1}`, value: String(i + 1) }));
+  for (const multiSelect of [false, true]) {
+    const ctx = ui();
+    const pending = tool.execute('numbers', { question: 'Choose?', options, multiSelect }, undefined, undefined, ctx);
+    await tick();
+    assert.match(ctx.component.render(120).join('\n'), /1-9/);
+    if (multiSelect) {
+      const rendered = ctx.component.render(120).join('\n');
+      assert.match(rendered, /> ○ 1 Choice 1/);
+      assert.match(rendered, /○ · Choice 10/);
+      assert.match(rendered, /○ · Other/);
+      assert.doesNotMatch(rendered, /\[ \]/);
+    }
+    for (const key of ['0', 'x', '12']) ctx.component.handleInput(key);
+    assert.equal(ctx.closes, 0);
+    if (multiSelect) {
+      for (const key of ['2', '2', '1']) ctx.component.handleInput(key);
+      assert.match(ctx.component.render(120).join('\n'), /● 1 Choice 1/);
+      assert.match(ctx.component.render(120).join('\n'), /○ 2 Choice 2/);
+    }
+    ctx.component.handleInput('9');
+    assert.equal(ctx.closes, 0);
+    if (!multiSelect) {
+      assert.match(ctx.component.render(120).join('\n'), /> 9\. Choice 9/);
+      ctx.component.handleInput('9');
+      assert.equal(ctx.closes, 0);
+      ctx.component.handleInput('enter');
+    }
+    if (multiSelect) {
+      assert.equal(ctx.closes, 0);
+      ctx.component.handleInput('enter');
+    }
+    const result = await pending;
+    assert.deepEqual(result.details.answers.map(answer => answer.value), multiSelect ? ['1', '9'] : ['9']);
+  }
+});
+test('multi-select Enter requires an answer and submits from a regular option row', async () => {
+  const ctx = ui();
+  const pending = tool.execute('enter-submit', { question: 'Choose?', options: [{ label: 'A' }, { label: 'B' }], multiSelect: true }, undefined, undefined, ctx);
+  await tick();
+  ctx.component.handleInput('enter');
+  assert.equal(ctx.closes, 0);
+  assert.match(ctx.component.render(120).join('\n'), /SPACE/);
+  ctx.component.handleInput('space');
+  ctx.component.handleInput('down');
+  ctx.component.handleInput('enter');
+  assert.deepEqual((await pending).details.answers.map(answer => answer.value), ['A']);
+});
+test('number keys preserve custom and free-form text and ignore missing choices', async () => {
+  const options = [{ label: 'A', value: 'a' }];
+  for (const multiSelect of [false, true]) {
+    const ctx = ui();
+    const pending = tool.execute('custom-number', { question: 'Choose?', options, multiSelect }, undefined, undefined, ctx);
+    await tick();
+    for (const key of ['2', '9']) ctx.component.handleInput(key);
+    assert.equal(ctx.closes, 0);
+    for (const key of ['down', 'enter', '1', '9', 'enter']) ctx.component.handleInput(key);
+    if (multiSelect) for (const key of ['down', 'enter']) ctx.component.handleInput(key);
+    assert.deepEqual((await pending).details.answers.map(answer => answer.value), ['19']);
+  }
+  const ctx = ui();
+  const pending = tool.execute('text-number', { question: 'Number?' }, undefined, undefined, ctx);
+  await tick();
+  for (const key of ['1', '9', 'enter']) ctx.component.handleInput(key);
+  assert.deepEqual((await pending).details.answers.map(answer => answer.value), ['19']);
+});
 test('every flat prompt guideline identifies its tool', () => {
   assert.ok(tool.promptGuidelines.every(line => line.includes('ask_user_question')));
 });
