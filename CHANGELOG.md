@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-16
+
+### Added
+
+- Use keys 1–9 to highlight a single answer, then press Enter to confirm. In multi-select, number keys toggle answers. Number keys still enter text in custom answers and text questions.
+- Submit multi-select answers with Enter from any regular option or Submit. Enter on Other still opens custom text entry. Show SPACE in bold in the toggle instructions.
+- Match the shared multi-select row style: dim ○ for unselected answers, green ● for selected answers, and an accented focus arrow. Show plain shortcut numbers 1–9 and a dot for rows without a number shortcut.
+
 ## [0.3.0] - 2026-11-14
 
 ### Added

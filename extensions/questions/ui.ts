@@ -116,6 +116,13 @@ export async function askSingleChoice(
 				refresh();
 				return;
 			}
+			const number = ["1", "2", "3", "4", "5", "6", "7", "8", "9"].find((key) => matchesKey(data, key));
+			const numberedOption = number ? options[Number(number) - 1] : undefined;
+			if (numberedOption) {
+				optionIndex = Number(number) - 1;
+				refresh();
+				return;
+			}
 			if (matchesKey(data, Key.enter)) {
 				const selected = allOptions[optionIndex];
 				if (selected.isOther) {
@@ -177,7 +184,7 @@ export async function askSingleChoice(
 				add(theme.fg("dim", " Enter to submit • Esc to go back"));
 			} else {
 				lines.push("");
-				add(theme.fg("dim", " ↑↓ navigate • Enter select • Esc cancel"));
+				add(theme.fg("dim", " ↑↓/1-9 navigate • Enter select • Esc cancel"));
 			}
 
 			add(theme.fg("accent", "─".repeat(width)));
@@ -277,6 +284,14 @@ export async function askMultiChoice(
 				return;
 			}
 
+			const number = ["1", "2", "3", "4", "5", "6", "7", "8", "9"].find((key) => matchesKey(data, key));
+			const numberedOption = number ? choiceItems[Number(number) - 1] : undefined;
+			if (numberedOption) {
+				optionIndex = Number(number) - 1;
+				toggleOption(numberedOption);
+				return;
+			}
+
 			const current = allItems[optionIndex];
 			if (matchesKey(data, Key.space)) {
 				if (current.isSubmit) return;
@@ -296,19 +311,15 @@ export async function askMultiChoice(
 			}
 
 			if (matchesKey(data, Key.enter)) {
-				if (current.isSubmit) {
-					if (selected.size > 0) {
-						done(sortAnswers(Array.from(selected.values())));
-					}
-					return;
-				}
 				if (current.isOther) {
 					editMode = true;
 					editor.setText(selected.get("other")?.label || "");
 					refresh();
 					return;
 				}
-				toggleOption(current);
+				if (selected.size > 0) {
+					done(sortAnswers(Array.from(selected.values())));
+				}
 				return;
 			}
 
@@ -351,22 +362,16 @@ export async function askMultiChoice(
 
 				if (item.isOther) {
 					const other = selected.get("other");
-					const marker = other ? "[x]" : "[ ]";
+					const marker = other ? theme.fg("success", "●") : theme.fg("dim", "○");
 					const suffix = other ? ` — ${other.label}` : "";
-					const styled = isFocused
-						? theme.fg("accent", `${marker} ${item.label}${suffix}`)
-						: theme.fg(other ? "success" : "text", `${marker} ${item.label}${suffix}`);
-					add(`${prefix}${styled}`);
+					add(`${prefix}${marker} · ${theme.fg("text", `${item.label}${suffix}`)}`);
 					continue;
 				}
 
 				const checked = selected.has(item.id);
-				const marker = checked ? "[x]" : "[ ]";
-				const label = `${marker} ${item.index}. ${item.label}`;
-				const styled = isFocused
-					? theme.fg("accent", label)
-					: theme.fg(checked ? "success" : "text", label);
-				add(`${prefix}${styled}`);
+				const marker = checked ? theme.fg("success", "●") : theme.fg("dim", "○");
+				const number = item.index! <= 9 ? String(item.index) : "·";
+				add(`${prefix}${marker} ${number} ${theme.fg("text", item.label)}`);
 				if (item.description) {
 					addWrapped(lines, theme.fg("muted", item.description), width, "     ");
 				}
@@ -385,7 +390,7 @@ export async function askMultiChoice(
 				if (selected.size === 0) {
 					add(theme.fg("warning", " Select at least one answer before submitting."));
 				}
-				add(theme.fg("dim", " ↑↓ navigate • Space toggle • Enter edit/submit • Esc cancel"));
+				add(theme.fg("dim", ` ↑↓ navigate • 1-9/${theme.bold("SPACE")} toggle • Enter submit/Other edit • Esc cancel`));
 			}
 
 			add(theme.fg("accent", "─".repeat(width)));
