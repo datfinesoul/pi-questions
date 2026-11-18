@@ -13,13 +13,19 @@ export function getOtherLabel(options) {
   return options.some((option) => option.label.toLowerCase() === "other") ? "Other (custom)" : "Other";
 }
 
-function formatAnswerForModel(answer) {
-  switch (answer.type) {
-    case "text": return answer.label;
-    case "other": return `Other: ${answer.label}`;
-    case "option": return `${answer.index}. ${answer.label}`;
-  }
+function formatSelectionForModel(mode, answers) {
+  const labels = answers.map((answer) => `${answer.index}. ${answer.label}`);
+  return mode === "single-select"
+    ? `User selected: ${labels[0]}`
+    : `User selected:\n${labels.map((label) => `- ${label}`).join("\n")}`;
 }
+
+const CLARIFICATION_GUIDANCE = [
+  "A reply in the user's own words can be a valid answer.",
+  "If the reply asks a question or requests clarification, answer it in prose and end the turn.",
+  "For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message.",
+  "You may briefly state that the decision remains open in prose.",
+].join(" ");
 
 function answerSortRank(answer) {
   switch (answer.type) {
@@ -40,7 +46,7 @@ export function buildStructuredResult(status, question, mode, answers, context, 
 export function cancelledResult(question, mode, context) {
   const message = "User cancelled the question";
   return {
-    content: [{ type: "text", text: message }],
+    content: [{ type: "text", text: `${message}. Do not repeat or rephrase this question unless the user requests it. You may briefly state that the decision remains open in prose.` }],
     details: buildStructuredResult("cancelled", question, mode, [], context, message),
   };
 }
@@ -56,11 +62,21 @@ export function buildResult(question, context, mode, answers) {
   let text;
   if (mode === "text") {
     const answer = answers[0];
-    text = answer.label.trim().length > 0 ? `User answered: ${answer.label}` : "User submitted an empty response";
-  } else if (mode === "single-select") {
-    text = `User selected: ${formatAnswerForModel(answers[0])}`;
+    text = answer.label.trim().length > 0
+      ? `User replied: ${answer.label}\n\n${CLARIFICATION_GUIDANCE}`
+      : "User submitted an empty response";
   } else {
-    text = `User selected:\n${answers.map((answer) => `- ${formatAnswerForModel(answer)}`).join("\n")}`;
+    const selected = answers.filter((answer) => answer.type === "option");
+    const custom = answers.filter((answer) => answer.type === "other");
+    if (custom.length > 0) {
+      text = [
+        selected.length > 0 ? formatSelectionForModel(mode, selected) : "No listed option was selected.",
+        ...custom.map((answer) => `User supplied a custom reply: ${JSON.stringify(answer.label)}`),
+        CLARIFICATION_GUIDANCE,
+      ].join("\n\n");
+    } else {
+      text = formatSelectionForModel(mode, selected);
+    }
   }
   return {
     content: [{ type: "text", text }],

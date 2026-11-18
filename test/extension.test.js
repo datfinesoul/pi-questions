@@ -26,6 +26,45 @@ test('tool guidance keeps references clear and separates answers from execution 
   assert.match(guidance, /Selecting an approach does not by itself authorize its execution/);
   assert.match(guidance, /Cancellation, unavailable UI, and empty text do not imply approval/);
 });
+test('tool guidance allows clarification without another decision question', () => {
+  const guidance = tool.promptGuidelines.join('\n');
+  assert.match(guidance, /If the user replies with a question or asks for clarification, answer it in prose and end the turn\./);
+  assert.match(guidance, /For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message\./);
+  assert.match(guidance, /If the user cancels a question, do not repeat or rephrase it unless the user requests it\./);
+  assert.match(guidance, /decision remains open in prose/);
+  assert.match(guidance, /exceptions take precedence over the requirement/);
+});
+test('clarification replies reach the model in every input mode without losing selections', async () => {
+  const reply = 'what did the alb guide say?';
+  const options = [{ label: 'Fix the links', value: 'links' }];
+  const cases = [
+    [{ question: 'Which findings should I fix?' }, [reply, 'enter'], ['text']],
+    [{ question: 'Which findings should I fix?', options }, ['down', 'enter', reply, 'enter'], ['other']],
+    [{ question: 'Which findings should I fix?', options, multiSelect: true }, ['down', 'enter', reply, 'enter', 'down', 'enter'], ['other']],
+    [{ question: 'Which findings should I fix?', options, multiSelect: true }, ['space', 'down', 'enter', reply, 'enter', 'down', 'enter'], ['option', 'other']],
+  ];
+  for (const [params, keys, types] of cases) {
+    const ctx = ui();
+    const pending = tool.execute('clarify', params, undefined, undefined, ctx);
+    await tick();
+    for (const key of keys) ctx.component.handleInput(key);
+    const result = await pending;
+    assert.equal(result.details.status, 'answered');
+    assert.deepEqual(result.details.answers.map(answer => answer.type), types);
+    assert.equal(result.details.answers.at(-1).value, reply);
+    assert.ok(result.content[0].text.includes(reply));
+    assert.match(result.content[0].text, /answer it in prose and end the turn/);
+    assert.match(result.content[0].text, /For clarification replies, do not repeat or rephrase the pending decision/);
+    if (types.includes('option')) {
+      assert.equal(result.details.answers[0].value, 'links');
+      assert.match(result.content[0].text, /User selected:\n- 1\. Fix the links/);
+      assert.doesNotMatch(result.content[0].text, /No listed option was selected/);
+    }
+    assert.equal(ctx.opens, 1);
+    assert.equal(ctx.closes, 1);
+    assert.equal(result.terminate, undefined);
+  }
+});
 test('text questions separate context and label the answer area', async () => {
   for (const details of [undefined, 'Choose the profile you manage.']) {
     const ctx = ui();

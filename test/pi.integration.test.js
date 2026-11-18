@@ -25,6 +25,7 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
   assert.equal(tool.name, "ask_user_question");
   assert.deepEqual(events, ["session_start"]);
   assert.equal(tool.exposure, "model-only");
+  assert.ok(tool.promptGuidelines.some(line => line.includes("answer it in prose and end the turn")));
   const options = [{ label: "First", value: "first", description: "A longer description that wraps on narrow terminals." }];
   const cases = [
     [{ question: "Text?" }, ["answer", "\r"], "answered", "text"],
@@ -33,6 +34,10 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
     [{ question: "Multi other?", options, multiSelect: true }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "other"],
     [{ question: "Multi?", options, multiSelect: true }, [" ", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
     [{ question: "Cancel?", options }, ["\x1b"], "cancelled", undefined],
+    [{ question: "Clarify text?" }, ["what did the alb guide say?", "\r"], "answered", "text"],
+    [{ question: "Clarify other?", options }, ["\x1b[B", "\r", "what did the alb guide say?", "\r"], "answered", "other"],
+    [{ question: "Clarify multi?", options, multiSelect: true }, ["\x1b[B", "\r", "what did the alb guide say?", "\r", "\x1b[B", "\r"], "answered", "other"],
+    [{ question: "Clarify mixed?", options, multiSelect: true }, [" ", "\x1b[B", "\r", "what did the alb guide say?", "\r", "\x1b[B", "\r"], "answered", "option"],
   ];
   for (const [params, keys, status, answerType] of cases) {
     const result = await tool.execute("test", params, undefined, undefined, {
@@ -66,5 +71,22 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
     });
     assert.equal(result.details.status, status);
     assert.equal(result.details.answers[0]?.type, answerType);
+    const text = result.content[0].text;
+    if (answerType === "text" || result.details.answers.some(answer => answer.type === "other")) {
+      assert.match(text, /If the reply asks a question or requests clarification, answer it in prose and end the turn\./);
+      assert.match(text, /For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message\./);
+    }
+    if (result.details.answers.some(answer => answer.type === "other")) {
+      assert.match(text, /User supplied a custom reply:/);
+      if (answerType === "option") {
+        assert.match(text, /User selected:\n- 1\. First/);
+        assert.doesNotMatch(text, /No listed option was selected/);
+        assert.equal(result.details.answers[1].value, "what did the alb guide say?");
+      } else {
+        assert.match(text, /No listed option was selected\./);
+      }
+    }
+    if (status === "cancelled") assert.match(text, /unless the user requests it/);
+    assert.equal(result.terminate, undefined);
   }
 });

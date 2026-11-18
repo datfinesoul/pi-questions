@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-19
+
+### Fixed
+
+- Add clarification and cancellation exceptions to the decision rule and tool guidance. Tell the model to answer clarification in prose and end its turn without repeating or rephrasing the pending decision.
+- Report Other text as a custom reply, separate from listed selections. Preserve valid custom answers, mixed selections, and structured result details. Add conditional clarification guidance to non-empty text replies.
+- Tell the model not to repeat or rephrase a cancelled question unless the user requests it.
+- Save the decision-rule answer only when the user selects Yes or No. When the user presses Escape, the extension does not create `.pi/questions.json` and asks again at the next session start.
+
 ## [0.5.0] - 2026-11-18
 
 ### Changed

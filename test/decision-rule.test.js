@@ -28,9 +28,10 @@ function host(cwd, overrides = {}) {
     ui: {
       notify: (message, level) => notes.push({ message, level }),
       setStatus: (key, text) => statuses.push({ key, text }),
-      confirm: async (title, details) => {
-        prompts.push({ title, details });
-        return true;
+      select: async (title, options) => {
+        const [question, ...rest] = title.split("\n");
+        prompts.push({ title: question, details: rest.join("\n"), options });
+        return "Yes";
       },
     },
     notes,
@@ -60,6 +61,24 @@ test("rule block is created, appended, replaced, and left alone when current", (
     content: `# Project\n\n${block}\n\n## After\n`,
     action: "replaced",
   });
+});
+
+test("the decision rule permits prose and waiting after clarification or cancellation", () => {
+  assert.equal(buildRuleBlock(), [
+    RULE_START,
+    "## Decision questions",
+    "",
+    "When the next step depends on a choice, call the `ask_user_question` tool before you continue, unless an exception below applies.",
+    "Do not list open decisions as prose, except as allowed below.",
+    "Ask one question per tool call.",
+    "Give options when the choices are known.",
+    "If the user replies with a question or asks for clarification, answer it in prose and end the turn.",
+    "For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message.",
+    "If the user cancels, do not repeat or rephrase the question unless the user requests it.",
+    "After clarification or cancellation, you may briefly state that the decision remains open in prose.",
+    "",
+    RULE_END,
+  ].join("\n"));
 });
 
 test("a damaged marker pair is never rewritten", () => {
@@ -113,14 +132,14 @@ test("the offer creates AGENTS.md when the project has none", async () => {
 
 test("a declined offer is remembered and touches no rule file", async () => {
   const cwd = await project();
-  const ctx = host(cwd, { ui: { notify: () => {}, confirm: async () => false } });
+  const ctx = host(cwd, { ui: { notify: () => {}, select: async () => "No" } });
   await start(ctx);
 
   assert.deepEqual(await readConfigFile(cwd), { decisionRule: "off" });
   assert.equal(existsSync(join(cwd, "AGENTS.md")), false);
   assert.deepEqual(ctx.notes, []);
 
-  const again = host(cwd, { ui: { notify: () => {}, confirm: async () => { throw new Error("must not ask"); } } });
+  const again = host(cwd, { ui: { notify: () => {}, select: async () => { throw new Error("must not ask"); } } });
   await start(again);
 });
 
@@ -139,26 +158,53 @@ test("an existing block does not skip the offer and is not duplicated", async ()
   assert.deepEqual(ctx.statuses, [{ key: "pi-questions", text: undefined }]);
 });
 
+test("dismissing the offer records nothing and asks again next session", async () => {
+  const cwd = await project();
+  await start(host(cwd, { ui: { notify: () => {}, select: async () => undefined } }));
+
+  assert.equal(existsSync(join(cwd, ".pi", "questions.json")), false);
+  assert.equal(existsSync(join(cwd, "AGENTS.md")), false);
+
+  const again = host(cwd);
+  await start(again);
+  assert.equal(again.prompts.length, 1);
+  assert.deepEqual(await readConfigFile(cwd), { decisionRule: "on" });
+});
+
 test("declining leaves an existing block in place", async () => {
   const original = `# Project\n\n${buildRuleBlock()}\n`;
   const cwd = await project({ "AGENTS.md": original });
-  await start(host(cwd, { ui: { notify: () => {}, setStatus: () => {}, confirm: async () => false } }));
+  await start(host(cwd, { ui: { notify: () => {}, setStatus: () => {}, select: async () => "No" } }));
 
   assert.equal(await readFile(join(cwd, "AGENTS.md"), "utf8"), original);
   assert.deepEqual(await readConfigFile(cwd), { decisionRule: "off" });
 });
 
-test("a recorded decision keeps the owned block current", async () => {
+test("a recorded decision refreshes the previous rule and preserves surrounding instructions", async () => {
+  const previousRule = [
+    RULE_START,
+    "## Decision questions",
+    "",
+    "When the next step depends on a choice, call the `ask_user_question` tool before you continue.",
+    "Do not list open decisions as prose.",
+    "Ask one question per tool call.",
+    "Give options when the choices are known.",
+    "",
+    RULE_END,
+  ].join("\n");
+  const before = "# Project\n\nKeep these instructions.\n\n";
+  const after = "\n\n## After\nKeep these too.\n";
   const cwd = await project({
     ".pi/questions.json": '{"decisionRule":"on"}',
-    "AGENTS.md": `# Project\n\n${RULE_START}\nold text\n${RULE_END}\n`,
+    "AGENTS.md": `${before}${previousRule}${after}`,
   });
   const ctx = host(cwd);
   await start(ctx);
 
   assert.equal(ctx.prompts.length, 0);
-  assert.equal(await readFile(join(cwd, "AGENTS.md"), "utf8"), `# Project\n\n${buildRuleBlock()}\n`);
+  assert.equal(await readFile(join(cwd, "AGENTS.md"), "utf8"), `${before}${buildRuleBlock()}${after}`);
   assert.match(ctx.notes[0].message, /Run \/reload/);
+  assert.deepEqual(ctx.statuses.at(-1), { key: "pi-questions", text: "Run /reload to load the decision rule" });
 });
 
 test("a recorded decision restores a deleted block", async () => {
