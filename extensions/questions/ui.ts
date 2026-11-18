@@ -53,7 +53,7 @@ export async function askText(ctx: any, question: string, context: string | unde
 				}
 				lines.push("");
 				addWrapped(lines, theme.fg("accent", "Your answer"), width);
-				lines.push(...editor.render(width));
+				lines.push(...editor.render(width).map((line) => truncateToWidth(line, width)));
 				lines.push(truncateToWidth(theme.fg("dim", "Enter submit • Esc cancel"), width));
 				return lines;
 			},
@@ -176,12 +176,9 @@ export async function askSingleChoice(
 
 			if (editMode) {
 				lines.push("");
-				add(theme.fg("muted", " Write your custom answer:"));
-				for (const line of editor.render(Math.max(1, width - 2))) {
-					add(` ${line}`);
-				}
-				lines.push("");
-				add(theme.fg("dim", " Enter to submit • Esc to go back"));
+				addWrapped(lines, theme.fg("accent", "Your answer"), width);
+				lines.push(...editor.render(width).map((line) => truncateToWidth(line, width)));
+				add(theme.fg("dim", "Enter submit • Esc go back"));
 			} else {
 				lines.push("");
 				add(theme.fg("dim", " ↑↓/1-9 navigate • Enter select • Esc cancel"));
@@ -364,7 +361,7 @@ export async function askMultiChoice(
 					const other = selected.get("other");
 					const marker = other ? theme.fg("success", "●") : theme.fg("dim", "○");
 					const suffix = other ? ` — ${other.label}` : "";
-					add(`${prefix}${marker} · ${theme.fg("text", `${item.label}${suffix}`)}`);
+					add(`${prefix}${marker} ${theme.fg("text", `${item.label}${suffix}`)}`);
 					continue;
 				}
 
@@ -379,12 +376,9 @@ export async function askMultiChoice(
 
 			if (editMode) {
 				lines.push("");
-				add(theme.fg("muted", " Write your custom answer:"));
-				for (const line of editor.render(Math.max(1, width - 2))) {
-					add(` ${line}`);
-				}
-				lines.push("");
-				add(theme.fg("dim", " Enter to save • Esc to go back"));
+				addWrapped(lines, theme.fg("accent", "Your answer"), width);
+				lines.push(...editor.render(width).map((line) => truncateToWidth(line, width)));
+				add(theme.fg("dim", "Enter save • Esc go back"));
 			} else {
 				lines.push("");
 				if (selected.size === 0) {

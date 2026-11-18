@@ -86,7 +86,8 @@ test('number shortcuts highlight single answers and toggle multiple answers', as
       const rendered = ctx.component.render(120).join('\n');
       assert.match(rendered, /> ○ 1 Choice 1/);
       assert.match(rendered, /○ · Choice 10/);
-      assert.match(rendered, /○ · Other/);
+      assert.match(rendered, /○ Other/);
+      assert.doesNotMatch(rendered, /○ · Other/);
       assert.doesNotMatch(rendered, /\[ \]/);
     }
     for (const key of ['0', 'x', '12']) ctx.component.handleInput(key);
