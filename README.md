@@ -73,6 +73,8 @@ Tool arguments:
 
 Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include Other. If a supplied option is named Other, the custom entry becomes Other (custom).
 
+Custom text can answer the question or ask for clarification. For clarification, the guidance tells the model to explain and end its turn without repeating or rephrasing the pending decision. After cancellation, the guidance tells the model not to repeat or rephrase the question unless you request it. These instructions depend on model compliance.
+
 ## Configuration
 
 The extension records one decision for each project. A global installation still reads the configuration of a trusted project, and a project installation writes only its own project.
@@ -94,7 +96,8 @@ Any other value is invalid. The extension reports it with a warning, then offers
 The first interactive session in a project asks whether to register a decision-question rule. The offer arrives before a model turn, so the model does not ask it.
 
 - Accept: the extension adds the rule block to `AGENTS.md` in the working directory and records `"on"`. When the block is already there and current, the extension changes nothing and says so. No reload is needed in that case.
-- Decline or cancel: the extension records `"off"` and does not ask again.
+- Decline: the extension records `"off"` and does not ask again.
+- Dismiss with Escape: the extension records nothing and writes nothing. The next session start asks again.
 - No dialog-capable UI, or an untrusted project: the extension writes nothing and records nothing. Start an interactive session in a trusted project to get the offer.
 
 The configuration file is the only record of the decision. A rule block that is already in `AGENTS.md` does not skip the offer. An accept reuses that block and writes no duplicate.
@@ -134,6 +137,8 @@ The extension registers one model-only tool and opens a custom component in inte
 On `session_start`, the extension reads the project configuration. It offers the decision-question rule when the project has no decision and no rule block yet. It then writes the block, records the decision, and shows a notification. When the decision is `"on"`, it keeps the owned block current. It writes one project configuration file and one marked block in `AGENTS.md`. It starts no background process and sends no network request.
 
 Results contain model-facing text and structured `details`: `status`, `question`, `context`, `mode`, `answers`, and an optional `message`. Status is `answered`, `cancelled`, or `unavailable`. Answers contain a type, label, and value. Listed options also include a one-based index. Multi-select answers retain option order, followed by custom text.
+
+Model-facing text separates custom replies from listed selections, including mixed multi-select results. The `answered` status means the user submitted input, not necessarily a decision.
 
 A shared process-level lock serializes dialogs with other extensions that use `__piSharedUiLock`. An active abort closes the dialog and releases its listener and lock. An aborted queued call waits for earlier dialogs before it returns cancellation. It does not open a dialog.
 
