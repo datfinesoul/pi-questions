@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-18
+
+### Changed
+
+- Use the text-only editor's full width and Your answer label for Other answers in single-select and multi-select questions. Keep choices visible and preserve keyboard behavior.
+- Remove the shortcut placeholder dot before Other in multi-select questions. Keep the selection circle.
+
+### Fixed
+
+- Keep answer editors within the terminal width after text entry, including at a one-column width.
+
 ## [0.4.0] - 2026-11-16
 
 ### Added

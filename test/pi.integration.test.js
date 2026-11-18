@@ -30,6 +30,7 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
     [{ question: "Text?" }, ["answer", "\r"], "answered", "text"],
     [{ question: "Single?", options }, ["\r"], "answered", "option"],
     [{ question: "Other?", options }, ["\x1b[B", "\r", "custom", "\r"], "answered", "other"],
+    [{ question: "Multi other?", options, multiSelect: true }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "other"],
     [{ question: "Multi?", options, multiSelect: true }, [" ", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
     [{ question: "Cancel?", options }, ["\x1b"], "cancelled", undefined],
   ];
@@ -47,7 +48,19 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
             assert.ok(component.render(width).every(line => visibleWidth(line) <= width));
           }
           component.invalidate();
-          for (const key of keys) component.handleInput(key);
+          for (const key of keys) {
+            component.handleInput(key);
+            for (const width of [80, 20, 1, 40]) {
+              const lines = component.render(width);
+              assert.ok(lines.every(line => visibleWidth(line) <= width));
+              const labelIndex = lines.indexOf("Your answer");
+              if (labelIndex >= 0) {
+                assert.equal(visibleWidth(lines[labelIndex + 1]), width);
+                assert.doesNotMatch(lines[labelIndex + 1], /^ /);
+                if (params.options) assert.ok(lines.some(line => line.includes("First")));
+              }
+            }
+          }
         });
       } },
     });
