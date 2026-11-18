@@ -105,7 +105,7 @@ test("an accepted offer writes the block and records the decision", async () => 
   await start(ctx);
 
   assert.equal(ctx.prompts.length, 1);
-  assert.match(ctx.prompts[0].details, /asks this once for this project/);
+  assert.match(ctx.prompts[0].details, /saves your Yes or No answer for this project\. If you press Escape, it asks again at the next session start\./);
   assert.match(ctx.prompts[0].details, /edit decisionRule in \.pi\/questions\.json/);
   assert.match(ctx.prompts[0].details, /delete that file to see this prompt again/);
   assert.equal((await readFile(join(cwd, "AGENTS.md"), "utf8")).startsWith("# Project\n\n"), true);

@@ -32,7 +32,6 @@ test('tool guidance allows clarification without another decision question', () 
   assert.match(guidance, /For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message\./);
   assert.match(guidance, /If the user cancels a question, do not repeat or rephrase it unless the user requests it\./);
   assert.match(guidance, /decision remains open in prose/);
-  assert.match(guidance, /exceptions take precedence over the requirement/);
 });
 test('clarification replies reach the model in every input mode without losing selections', async () => {
   const reply = 'what did the alb guide say?';

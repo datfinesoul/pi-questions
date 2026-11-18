@@ -11,7 +11,7 @@ const RULE_YES = "Yes";
 const RULE_NO = "No";
 const RULE_QUESTION = "Register a decision-question rule in AGENTS.md?";
 const RULE_DETAILS =
-	"The extension asks this once for this project. Accept adds a marked rule block to AGENTS.md. Later, edit decisionRule in .pi/questions.json to change the answer, or delete that file to see this prompt again.";
+	"The extension saves your Yes or No answer for this project. If you press Escape, it asks again at the next session start. Yes adds a marked rule block to AGENTS.md. Later, edit decisionRule in .pi/questions.json to change the answer, or delete that file to see this prompt again.";
 const STATUS_KEY = "pi-questions";
 const RELOAD_STATUS = "Run /reload to load the decision rule";
 
@@ -128,7 +128,7 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Treat an answer as authorization only for the action explicitly asked about. Selecting an approach does not by itself authorize its execution. Cancellation, unavailable UI, and empty text do not imply approval.",
 			"If the user replies with a question or asks for clarification, answer it in prose and end the turn. For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message.",
 			"If the user cancels a question, do not repeat or rephrase it unless the user requests it.",
-			"After clarification or cancellation, you may briefly state that the decision remains open in prose. These exceptions take precedence over the requirement to use the question tool for decisions.",
+			"After clarification or cancellation, you may briefly state that the decision remains open in prose.",
 			"Use STE100-inspired wording in questions, details, and choices: plain words, active voice, and one idea per sentence. Avoid jargon, filler, and semicolons.",
 			"Keep the question direct, usually 20 words or fewer. Give each choice a short label, usually 2–6 words.",
 			"Omit details unless the user needs them to decide. Prefer 1–2 sentences and at most 40 words in total. Explain only why the decision matters or a key constraint. Do not repeat the question, prior discussion, or choice descriptions.",

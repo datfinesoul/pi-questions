@@ -61,7 +61,7 @@ test("free-text replies use neutral wording and conditional clarification guidan
   for (const label of ["what did the alb guide say?", "explain the ALB finding", "Use the revised guide"]) {
     const answer = { type: "text", label, value: label };
     const result = buildResult("Which guide?", undefined, "text", [answer]);
-    assert.ok(result.content[0].text.startsWith(`User replied: ${label}\n\n`));
+    assert.ok(result.content[0].text.startsWith(`User replied: ${JSON.stringify(label)}\n\n`));
     assert.match(result.content[0].text, /If the reply asks a question or requests clarification, answer it in prose and end the turn\./);
     assert.match(result.content[0].text, /For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message\./);
     assert.deepEqual(result.details.answers, [answer]);

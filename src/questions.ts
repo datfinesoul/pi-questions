@@ -63,7 +63,7 @@ export function buildResult(question, context, mode, answers) {
   if (mode === "text") {
     const answer = answers[0];
     text = answer.label.trim().length > 0
-      ? `User replied: ${answer.label}\n\n${CLARIFICATION_GUIDANCE}`
+      ? `User replied: ${JSON.stringify(answer.label)}\n\n${CLARIFICATION_GUIDANCE}`
       : "User submitted an empty response";
   } else {
     const selected = answers.filter((answer) => answer.type === "option");
