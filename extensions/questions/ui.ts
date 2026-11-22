@@ -46,180 +46,52 @@ export async function askText(ctx: any, question: string, context: string | unde
 			},
 			render(width: number) {
 				const lines: string[] = [];
-				addWrapped(lines, theme.fg("text", question), width);
+				lines.push(truncateToWidth(theme.fg("accent", "─".repeat(width)), width));
+				addWrapped(lines, theme.fg("text", ` ${question}`), width);
 				if (context) {
 					lines.push("");
-					addWrapped(lines, theme.fg("muted", context), width);
+					addWrapped(lines, theme.fg("muted", ` ${context}`), width);
 				}
 				lines.push("");
 				addWrapped(lines, theme.fg("accent", "Your answer"), width);
 				lines.push(...editor.render(width).map((line) => truncateToWidth(line, width)));
 				lines.push(truncateToWidth(theme.fg("dim", "Enter submit • Esc cancel"), width));
+				lines.push(truncateToWidth(theme.fg("accent", "─".repeat(width)), width));
 				return lines;
 			},
 		};
 	});
 }
 
-export async function askSingleChoice(
+// Undocumented convenience key: submit from any row, or save the Other text and
+// submit in one step. Terminals without the Kitty keyboard protocol or
+// modifyOtherKeys send plain Enter instead, so this key is never the only path.
+const SUBMIT_ANYWHERE = "ctrl+enter";
+
+export async function askChoice(
 	ctx: any,
 	question: string,
 	context: string | undefined,
 	options: AskOption[],
-	signal?: AbortSignal,
-): Promise<AskAnswer | null> {
-	const otherLabel = getOtherLabel(options);
-	const allOptions: DisplayOption[] = [
-		...options.map((option, index) => ({ ...option, id: `option:${index}`, index: index + 1 })),
-		{ id: "other", label: otherLabel, value: "__other__", isOther: true },
-	];
-
-	return ctx.ui.custom<AskAnswer | null>((tui: any, theme: any, _kb: any, done: (result: AskAnswer | null) => void) => {
-		const dispose = bindAbort(signal, () => done(null));
-		let optionIndex = 0;
-		let editMode = false;
-		let cachedLines: string[] | undefined;
-		let cachedWidth = -1;
-		const editor = new Editor(tui, createEditorTheme(theme));
-
-		editor.onSubmit = (value) => {
-			const trimmed = value.trim();
-			if (!trimmed) return;
-			done({ type: "other", label: trimmed, value: trimmed });
-		};
-
-		function refresh() {
-			cachedLines = undefined;
-			tui.requestRender();
-		}
-
-		function handleInput(data: string) {
-			if (editMode) {
-				if (matchesKey(data, Key.escape)) {
-					editMode = false;
-					editor.setText("");
-					refresh();
-					return;
-				}
-				editor.handleInput(data);
-				refresh();
-				return;
-			}
-
-			if (matchesKey(data, Key.up)) {
-				optionIndex = Math.max(0, optionIndex - 1);
-				refresh();
-				return;
-			}
-			if (matchesKey(data, Key.down)) {
-				optionIndex = Math.min(allOptions.length - 1, optionIndex + 1);
-				refresh();
-				return;
-			}
-			const number = ["1", "2", "3", "4", "5", "6", "7", "8", "9"].find((key) => matchesKey(data, key));
-			const numberedOption = number ? options[Number(number) - 1] : undefined;
-			if (numberedOption) {
-				optionIndex = Number(number) - 1;
-				refresh();
-				return;
-			}
-			if (matchesKey(data, Key.enter)) {
-				const selected = allOptions[optionIndex];
-				if (selected.isOther) {
-					editMode = true;
-					editor.setText("");
-					refresh();
-					return;
-				}
-				done({
-					type: "option",
-					label: selected.label,
-					value: selected.value,
-					index: selected.index!,
-				});
-				return;
-			}
-			if (matchesKey(data, Key.escape)) {
-				done(null);
-			}
-		}
-
-		function render(width: number): string[] {
-			// The cache MUST be keyed on width: pi-tui calls requestRender() but NOT
-			// invalidate() on terminal resize, so render() can be re-entered with a
-			// new width. Returning stale wider lines trips the TUI width guard and
-			// crashes the process.
-			if (cachedLines && cachedWidth === width) return cachedLines;
-
-			const lines: string[] = [];
-			const add = (text: string) => lines.push(truncateToWidth(text, width));
-
-			add(theme.fg("accent", "─".repeat(width)));
-			addWrapped(lines, theme.fg("text", ` ${question}`), width);
-			if (context) {
-				lines.push("");
-				addWrapped(lines, theme.fg("muted", ` ${context}`), width);
-			}
-			lines.push("");
-
-			for (let i = 0; i < allOptions.length; i++) {
-				const option = allOptions[i];
-				const selected = i === optionIndex;
-				const prefix = selected ? theme.fg("accent", "> ") : "  ";
-				const label = option.isOther ? option.label : `${option.index}. ${option.label}`;
-				const styled = selected ? theme.fg("accent", label) : theme.fg("text", label);
-				add(`${prefix}${styled}`);
-				if (option.description) {
-					addWrapped(lines, theme.fg("muted", option.description), width, "     ");
-				}
-			}
-
-			if (editMode) {
-				lines.push("");
-				addWrapped(lines, theme.fg("accent", "Your answer"), width);
-				lines.push(...editor.render(width).map((line) => truncateToWidth(line, width)));
-				add(theme.fg("dim", "Enter submit • Esc go back"));
-			} else {
-				lines.push("");
-				add(theme.fg("dim", " ↑↓/1-9 navigate • Enter select • Esc cancel"));
-			}
-
-			add(theme.fg("accent", "─".repeat(width)));
-			cachedLines = lines;
-			cachedWidth = width;
-			return lines;
-		}
-
-		return {
-			render,
-			invalidate: () => {
-				cachedLines = undefined;
-			},
-			handleInput,
-			dispose,
-		};
-	});
-}
-
-export async function askMultiChoice(
-	ctx: any,
-	question: string,
-	context: string | undefined,
-	options: AskOption[],
+	maxSelections: number,
 	signal?: AbortSignal,
 ): Promise<AskAnswer[] | null> {
 	const otherLabel = getOtherLabel(options);
+	const single = maxSelections === 1;
 	const choiceItems: DisplayOption[] = options.map((option, index) => ({
 		...option,
 		id: `option:${index}`,
 		index: index + 1,
 	}));
+	const otherItem: DisplayOption = {
+		id: "other",
+		label: `[${otherLabel}]`,
+		value: "__other__",
+		isOther: true,
+		index: choiceItems.length + 1,
+	};
 	const submitItem: DisplayOption = { id: "submit", label: "Submit", value: "__submit__", isSubmit: true };
-	const allItems: DisplayOption[] = [
-		...choiceItems,
-		{ id: "other", label: otherLabel, value: "__other__", isOther: true },
-		submitItem,
-	];
+	const allItems: DisplayOption[] = [...choiceItems, otherItem, submitItem];
 
 	return ctx.ui.custom<AskAnswer[] | null>((tui: any, theme: any, _kb: any, done: (result: AskAnswer[] | null) => void) => {
 		let optionIndex = 0;
@@ -230,34 +102,63 @@ export async function askMultiChoice(
 		const selected = new Map<string, AskAnswer>();
 		const editor = new Editor(tui, createEditorTheme(theme));
 
-		editor.onSubmit = (value) => {
-			const trimmed = value.trim();
-			if (!trimmed) return;
-			selected.set("other", { type: "other", label: trimmed, value: trimmed });
-			editMode = false;
-			refresh();
-		};
-
 		function refresh() {
 			cachedLines = undefined;
 			tui.requestRender();
 		}
 
+		function saveOther(value: string) {
+			const trimmed = value.trim();
+			if (!trimmed) return false;
+			selected.set("other", { type: "other", label: trimmed, value: trimmed });
+			editMode = false;
+			refresh();
+			return true;
+		}
+
+		function submit() {
+			if (selected.size === 0) return;
+			done(sortAnswers(Array.from(selected.values())));
+		}
+
+		function editOther() {
+			editMode = true;
+			editor.setText(selected.get("other")?.label || "");
+			refresh();
+		}
+
+		editor.onSubmit = (value) => {
+			saveOther(value);
+		};
+
 		function toggleOption(item: DisplayOption) {
 			if (selected.has(item.id)) {
 				selected.delete(item.id);
-			} else {
-				selected.set(item.id, {
-					type: "option",
-					label: item.label,
-					value: item.value,
-					index: item.index!,
-				});
+				refresh();
+				return;
 			}
+			// Other text does not count against the limit, so a single answer can
+			// still carry custom text. A full selection is replaced, not extended.
+			const listed = [...selected.keys()].filter((id) => id !== "other");
+			if (listed.length >= maxSelections) {
+				for (const id of listed) selected.delete(id);
+			}
+			selected.set(item.id, {
+				type: "option",
+				label: item.label,
+				value: item.value,
+				index: item.index!,
+			});
 			refresh();
 		}
 
 		function handleInput(data: string) {
+			if (matchesKey(data, SUBMIT_ANYWHERE)) {
+				if (editMode && !saveOther(editor.getText())) return;
+				submit();
+				return;
+			}
+
 			if (editMode) {
 				if (matchesKey(data, Key.escape)) {
 					editMode = false;
@@ -282,10 +183,13 @@ export async function askMultiChoice(
 			}
 
 			const number = ["1", "2", "3", "4", "5", "6", "7", "8", "9"].find((key) => matchesKey(data, key));
-			const numberedOption = number ? choiceItems[Number(number) - 1] : undefined;
-			if (numberedOption) {
+			const numberedItem = number ? allItems[Number(number) - 1] : undefined;
+			if (numberedItem && !numberedItem.isSubmit) {
 				optionIndex = Number(number) - 1;
-				toggleOption(numberedOption);
+				// Other has no value until the user types one, so its number opens
+				// the editor instead of toggling a selection.
+				if (numberedItem.isOther) editOther();
+				else toggleOption(numberedItem);
 				return;
 			}
 
@@ -297,9 +201,7 @@ export async function askMultiChoice(
 						selected.delete("other");
 						refresh();
 					} else {
-						editMode = true;
-						editor.setText("");
-						refresh();
+						editOther();
 					}
 					return;
 				}
@@ -309,14 +211,10 @@ export async function askMultiChoice(
 
 			if (matchesKey(data, Key.enter)) {
 				if (current.isOther) {
-					editMode = true;
-					editor.setText(selected.get("other")?.label || "");
-					refresh();
+					editOther();
 					return;
 				}
-				if (selected.size > 0) {
-					done(sortAnswers(Array.from(selected.values())));
-				}
+				submit();
 				return;
 			}
 
@@ -349,10 +247,11 @@ export async function askMultiChoice(
 				const prefix = isFocused ? theme.fg("accent", "> ") : "  ";
 
 				if (item.isSubmit) {
-					const label = selected.size > 0 ? `✓ ${item.label} (${selected.size} selected)` : `○ ${item.label}`;
+					// No selection marker: Submit acts on the selection, it is not one.
+					const label = selected.size > 0 ? `${item.label} (${selected.size} selected)` : item.label;
 					const styled = isFocused
-						? theme.fg("accent", label)
-						: theme.fg(selected.size > 0 ? "success" : "dim", label);
+						? theme.fg("accent", theme.bold(label))
+						: theme.fg(selected.size > 0 ? "success" : "dim", theme.bold(label));
 					add(`${prefix}${styled}`);
 					continue;
 				}
@@ -361,14 +260,15 @@ export async function askMultiChoice(
 					const other = selected.get("other");
 					const marker = other ? theme.fg("success", "●") : theme.fg("dim", "○");
 					const suffix = other ? ` — ${other.label}` : "";
-					add(`${prefix}${marker} ${theme.fg("text", `${item.label}${suffix}`)}`);
+					const number = item.index! <= 9 ? String(item.index) : "·";
+					add(`${prefix}${number} ${marker} ${theme.fg("text", `${item.label}${suffix}`)}`);
 					continue;
 				}
 
 				const checked = selected.has(item.id);
 				const marker = checked ? theme.fg("success", "●") : theme.fg("dim", "○");
 				const number = item.index! <= 9 ? String(item.index) : "·";
-				add(`${prefix}${marker} ${number} ${theme.fg("text", item.label)}`);
+				add(`${prefix}${number} ${marker} ${theme.fg("text", item.label)}`);
 				if (item.description) {
 					addWrapped(lines, theme.fg("muted", item.description), width, "     ");
 				}
@@ -384,7 +284,8 @@ export async function askMultiChoice(
 				if (selected.size === 0) {
 					add(theme.fg("warning", " Select at least one answer before submitting."));
 				}
-				add(theme.fg("dim", ` ↑↓ navigate • 1-9/${theme.bold("SPACE")} toggle • Enter submit/Other edit • Esc cancel`));
+				const action = single ? "select" : "toggle";
+				add(theme.fg("dim", ` ↑↓ navigate • 1-9/${theme.bold("SPACE")} ${action} • Enter submit/Other edit • Esc cancel`));
 			}
 
 			add(theme.fg("accent", "─".repeat(width)));
@@ -403,4 +304,3 @@ export async function askMultiChoice(
 		};
 	});
 }
-

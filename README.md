@@ -56,11 +56,13 @@ pi --no-extensions --extension ./extensions/questions/index.ts
 
 The model calls `ask_user_question` when missing information or a decision materially affects the work. The extension adds no slash command or global shortcut.
 
+The tool has three question types: **Text**, **Single-select**, and **Multi-select**. Their result `mode` values are `text`, `single-select`, and `multi-select`. A **choice question** means single-select or multi-select. Other is not a fourth type.
+
 - **Text:** Type an answer. Press Enter to submit or Esc to cancel. Empty text answers are permitted.
-- **Single-select:** Use Up and Down or keys 1–9 to highlight an option. Press Enter to confirm the highlighted option.
-- **Other:** Select Other to enter custom text. Press Enter to submit or Esc to return to the choices. Custom text must not be empty.
-- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter on a regular option or Submit to submit at least one answer. Enter on Other opens custom text entry.
-- **Cancel:** Press Esc from the choice list to cancel.
+- **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. Press Enter to submit. Selecting another option replaces the first.
+- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter to submit at least one answer. Enter on Other opens custom text entry.
+- **Other:** Select Other to enter custom text. This row appears in both choice types. Other takes the next number after the last option and shows in square brackets, and its number opens the text editor. Press Enter to save the text and Esc to return to the choices. In a single-select question, the extension returns the custom text together with the selected option. Custom text must not be empty.
+- **Cancel:** Press Esc to cancel any question type.
 
 Tool arguments:
 
@@ -71,7 +73,7 @@ Tool arguments:
 | `options` | Optional list of `{ label, value?, description? }` objects. Omit it or use an empty list for text input. |
 | `multiSelect` | Set to `true` to permit multiple choices. It has no effect without options. |
 
-Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include Other. If a supplied option is named Other, the custom entry becomes Other (custom).
+Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include Other, numbered after the last option and shown in square brackets. If a supplied option is named Other, the custom entry becomes `[Other (custom)]`. A single-select answer can contain one option and Other text.
 
 Custom text can answer the question or ask for clarification. For clarification, the guidance tells the model to explain and end its turn without repeating or rephrasing the pending decision. After cancellation, the guidance tells the model not to repeat or rephrase the question unless you request it. These instructions depend on model compliance.
 
@@ -136,9 +138,9 @@ The extension registers one model-only tool and opens a custom component in inte
 
 On `session_start`, the extension reads the project configuration. It offers the decision-question rule when the project has no decision and no rule block yet. It then writes the block, records the decision, and shows a notification. When the decision is `"on"`, it keeps the owned block current. It writes one project configuration file and one marked block in `AGENTS.md`. It starts no background process and sends no network request.
 
-Results contain model-facing text and structured `details`: `status`, `question`, `context`, `mode`, `answers`, and an optional `message`. Status is `answered`, `cancelled`, or `unavailable`. Answers contain a type, label, and value. Listed options also include a one-based index. Multi-select answers retain option order, followed by custom text.
+Results contain model-facing text and structured `details`: `status`, `question`, `context`, `mode`, `answers`, and an optional `message`. Status is `answered`, `cancelled`, or `unavailable`. Answers contain a type, label, and value. Listed options also include a one-based index. Choice answers retain option order, followed by custom text. A single-select answer contains at most one listed option, and it can also include custom text.
 
-Model-facing text separates custom replies from listed selections, including mixed multi-select results. The `answered` status means the user submitted input, not necessarily a decision.
+Model-facing text separates custom replies from listed selections, including results that mix both. The `answered` status means the user submitted input, not necessarily a decision.
 
 A shared process-level lock serializes dialogs with other extensions that use `__piSharedUiLock`. An active abort closes the dialog and releases its listener and lock. An aborted queued call waits for earlier dialogs before it returns cancellation. It does not open a dialog.
 
@@ -165,7 +167,7 @@ npm run pack:check
 
 Use `pnpm test` and `pnpm run pack:check` with pnpm. The deterministic tests use dependency-free host doubles and Node.js type stripping. Set `PI_CODING_AGENT_ENTRY` to an installed Pi `dist/index.js` to enable tests with real host modules. Without that variable, the installed-Pi test reports a skip.
 
-Manual checks remain necessary. Run `/reload`, then test text, both choice modes, Other, cancellation, terminal resizing, and focus with your terminal and theme. Check regular and fullscreen modes. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Manual checks remain necessary. Run `/reload`, then test text, both choice modes, Other, one option with Other text, cancellation, terminal resizing, and focus with your terminal and theme. Check regular and fullscreen modes. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

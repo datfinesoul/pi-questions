@@ -3,7 +3,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import type { AskUserQuestionMode, AskUserQuestionResultDetails } from "./types.ts";
-import { askText, askSingleChoice, askMultiChoice } from "./ui.ts";
+import { askText, askChoice } from "./ui.ts";
 import { normalizeOptions, getOtherLabel, cancelledResult, unavailableResult, buildResult, withUILock } from "../../src/questions.ts";
 import { installRuleBlock, readConfig, writeConfig } from "../../src/decision-rule.ts";
 
@@ -136,6 +136,7 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Preserve essential risks, conditions, uncertainty, and technical names. Use more words when needed for a safe, informed choice. Never truncate text to meet a length target.",
 			"Ask only questions that materially affect the work. Use separate calls for distinct decisions, and avoid unnecessary follow-up questions.",
 			'Users will always be able to select "Other" to provide custom text input when options are provided.',
+			'For a single-select question, the user can select one option, Other text, or both together.',
 			"Use multiSelect: true when options are independent and any combination can be valid. Keep options as distinct answers; do not fold their combinations into additional options.",
 			"Express related decisions as separate options in one multi-select, or as separate questions in separate calls. Do not pre-combine decision dimensions into options.",
 			'Present neutral options and let the user analyze them. Do not mark or order options by preference. In details, state only facts: applicable project rules, constraints, and what each option changes.',
@@ -172,14 +173,14 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 				}
 
 				if (mode === "single-select") {
-					const answer = await askSingleChoice(ctx, params.question, context, options, signal);
-					if (!answer) {
+					const answers = await askChoice(ctx, params.question, context, options, 1, signal);
+					if (!answers) {
 						return cancelledResult(params.question, mode, context);
 					}
-					return buildResult(params.question, context, mode, [answer]);
+					return buildResult(params.question, context, mode, answers);
 				}
 
-				const answers = await askMultiChoice(ctx, params.question, context, options, signal);
+				const answers = await askChoice(ctx, params.question, context, options, Number.POSITIVE_INFINITY, signal);
 				if (!answers) {
 					return cancelledResult(params.question, mode, context);
 				}

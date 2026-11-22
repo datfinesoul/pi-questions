@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-22
+
+### Added
+
+- Return Other text together with one listed option in a single-select question. The user can select one option, enter Other text, or combine both.
+- Number the Other row after the last option and show it in square brackets. Its number opens the text editor, because Other has no value until the user types one.
+
+### Changed
+
+- Put the option number before the selection circle in choice rows. Show the Submit row in bold without a selection marker, because it acts on the selection and is not one.
+- Draw the accent rule above and below a text question, so every dialog has the same frame.
+- Use one choice dialog for both choice modes. Up and Down move the cursor. SPACE or keys 1–9 select the row under the cursor, and a second press clears it. A single-select question allows one listed option, and a new option replaces the previous one.
+- Show the Submit row and the empty-selection warning in both choice modes. Enter submits from any row except Other, and Enter on Other still opens custom text entry.
+- Save Other text with Enter and return to the choice list in both modes. Pressing Enter on Other no longer submits the answer.
+
 ## [0.5.1] - 2026-11-19
 
 ### Fixed
