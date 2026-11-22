@@ -260,6 +260,9 @@ export async function askChoice(
 				const item = allItems[i];
 				const isFocused = i === optionIndex;
 				const prefix = isFocused ? theme.fg("accent", "> ") : "  ";
+				// Rows are numbered by position, so a printed number and the number
+				// key that selects it cannot disagree.
+				const number = i < 9 ? String(i + 1) : "·";
 
 				if (item.isSubmit) {
 					// No marker or count: Submit acts on the selection, it is not one.
@@ -276,14 +279,12 @@ export async function askChoice(
 					const opened = Boolean(other) || editMode;
 					const marker = opened ? theme.fg("success", "●") : theme.fg("dim", "○");
 					const suffix = other ? ` — ${other.label}` : "";
-					const number = item.index! <= 9 ? String(item.index) : "·";
 					add(`${prefix}${number} ${marker} ${theme.fg("text", `${item.label}${suffix}`)}`);
 					continue;
 				}
 
 				const checked = selected.has(item.id);
 				const marker = checked ? theme.fg("success", "●") : theme.fg("dim", "○");
-				const number = item.index! <= 9 ? String(item.index) : "·";
 				add(`${prefix}${number} ${marker} ${theme.fg("text", item.label)}`);
 				if (item.description) {
 					addWrapped(lines, theme.fg("muted", item.description), width, "     ");
