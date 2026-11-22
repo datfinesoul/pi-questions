@@ -94,11 +94,11 @@ const OptionSchema = Type.Object({
 
 const AskUserQuestionParams = Type.Object({
 	question: Type.String({
-		description: "Ask exactly one direct question. Use plain words and aim for 20 words or fewer.",
+		description: "Ask exactly one direct question. Use plain words and aim for 25 words or fewer.",
 	}),
 	details: Type.Optional(
 		Type.String({
-			description: "Optional context needed to answer. Prefer 1–2 short sentences, at most 40 words in total. Omit repeated background and option summaries. Preserve essential risks and conditions, even when they need more words.",
+			description: "Optional context needed to answer. Prefer 1–2 short sentences and usually 50 words or fewer. Omit repeated background and option summaries. Preserve essential risks and conditions, even when they need more words.",
 		}),
 	),
 	options: Type.Optional(
@@ -130,8 +130,9 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"If the user cancels a question, do not repeat or rephrase it unless the user requests it.",
 			"After clarification or cancellation, you may briefly state that the decision remains open in prose.",
 			"Use STE100-inspired wording in questions, details, and choices: plain words, active voice, and one idea per sentence. Avoid jargon, filler, and semicolons.",
-			"Keep the question direct, usually 20 words or fewer. Give each choice a short label, usually 2–6 words.",
-			"Omit details unless the user needs them to decide. Prefer 1–2 sentences and at most 40 words in total. Explain only why the decision matters or a key constraint. Do not repeat the question, prior discussion, or choice descriptions.",
+			"Keep the question direct, usually 25 words or fewer. Give each choice a short label, usually 2–6 words.",
+			"Name the concrete change and its effect on the user. Do not refer to code identifiers, file paths, or a list position such as item 12 without naming the subject.",
+			"Omit details unless the user needs them to decide. Prefer 1–2 sentences and usually 50 words or fewer. Explain only why the decision matters or a key constraint. Do not repeat the question, prior discussion, or choice descriptions.",
 			"Use at most one short sentence for each choice description. State its main benefit or trade-off. Omit descriptions that repeat labels.",
 			"Preserve essential risks, conditions, uncertainty, and technical names. Use more words when needed for a safe, informed choice. Never truncate text to meet a length target.",
 			"Ask only questions that materially affect the work. Use separate calls for distinct decisions, and avoid unnecessary follow-up questions.",

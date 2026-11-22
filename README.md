@@ -59,8 +59,8 @@ The model calls `ask_user_question` when missing information or a decision mater
 The tool has three question types: **Text**, **Single-select**, and **Multi-select**. Their result `mode` values are `text`, `single-select`, and `multi-select`. A **choice question** means single-select or multi-select. The custom text row is not a fourth type.
 
 - **Text:** Type an answer. Press Enter to submit or Esc to cancel. Empty text answers are permitted.
-- **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. Press Enter on an option row to move the cursor to Submit. Press Enter again to submit. Selecting another option replaces the first.
-- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter on an option row to move the cursor to Submit. Press Enter again to submit at least one answer. Enter on Other opens custom text entry.
+- **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. When an answer is selected, Enter on an option row moves the cursor to Submit. Press Enter again to submit. Selecting another option replaces the first.
+- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. When at least one answer is selected, Enter on an option row moves the cursor to Submit. Press Enter again to submit. Enter on Other opens custom text entry.
 - **Feedback and Other:** Both choice types end with a custom text row. Single-select calls it `[Feedback]` and multi-select calls it `[Other]`. The row takes the next number after the last option. Its number or SPACE opens the text editor. The row fills as soon as the editor opens. Enter saves the text. Enter with empty text clears the saved text. Esc returns to the choices and keeps the saved text. In a single-select question, the extension returns the custom text together with the selected option. Custom text must not be empty.
 - **Cancel:** Press Esc to cancel any question type.
 

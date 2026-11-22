@@ -18,7 +18,7 @@ All notable changes to this project are documented in this file. The format foll
 - Fill the custom row circle when its editor opens. Enter with empty text clears the saved text. Esc returns to the choices and keeps the saved text.
 - Draw the accent rule above and below a text question, so every dialog has the same frame.
 - Use one choice dialog for both choice modes. Up and Down move the cursor. SPACE selects or toggles the option under the cursor, keys 1–9 select or toggle their numbered option, and a second press clears the selection. A single-select question allows one listed option, and a new option replaces the previous one.
-- Show the Submit row and the empty-selection warning in both choice modes. Enter opens the text editor on the custom row and submits on the Submit row. On an option row it moves the cursor to Submit, so a selection can be checked before it is sent.
+- Show the Submit row and the empty-selection warning in both choice modes. Enter opens the text editor on the custom row and submits on the Submit row. On an option row with a selection it moves the cursor to Submit, so the answer can be checked before it is sent.
 - Report custom text with the answer type `custom` instead of `other`, so the type does not reuse a row label. A single-select result shows that answer as Feedback.
 - Save the custom text with Enter and return to the choice list in both modes. Pressing Enter on the custom row no longer submits the answer.
 

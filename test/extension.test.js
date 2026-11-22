@@ -7,11 +7,13 @@ test('tool guidance requests concise wording without losing decision-critical in
   const guidance = tool.promptGuidelines.join('\n');
   assert.match(guidance, /STE100-inspired/);
   assert.match(guidance, /Omit details unless/);
-  assert.match(guidance, /at most 40 words/);
+  assert.match(guidance, /usually 50 words or fewer/);
+  assert.match(guidance, /Name the concrete change and its effect on the user\./);
+  assert.match(guidance, /Do not refer to code identifiers, file paths, or a list position/);
   assert.match(guidance, /Preserve essential risks, conditions, uncertainty/);
   assert.match(guidance, /Never truncate text/);
   const fields = tool.parameters.properties;
-  assert.match(fields.question.description, /20 words or fewer/);
+  assert.match(fields.question.description, /25 words or fewer/);
   assert.match(fields.details.description, /1–2 short sentences/);
   assert.match(fields.details.description, /Preserve essential risks and conditions/);
   assert.match(fields.options.items.properties.label.description, /2–6 words/);
@@ -154,7 +156,7 @@ test('Enter on an option row moves to Submit and Enter on Submit sends', async (
     ctx.component.handleInput('enter');
     assert.equal(ctx.closes, 0);
     let rendered = ctx.component.render(120).join('\n');
-    assert.match(rendered, /^> Submit$/m);
+    assert.match(rendered, /^> 1 ○ A$/m, 'Enter with no selection stays on the option');
     assert.match(rendered, /Select at least one answer before submitting/);
     assert.doesNotMatch(rendered, /[○●✓] Submit/);
     ctx.component.handleInput('enter');

@@ -223,10 +223,13 @@ export async function askChoice(
 					submit();
 					return;
 				}
-				// Enter on an option row moves the cursor to Submit. It does not
-				// toggle or confirm, so the list stays easy to inspect.
-				optionIndex = allItems.length - 1;
-				refresh();
+				// Enter on an option row moves the cursor to Submit when an answer
+				// is ready. With nothing selected there is nothing to send, so the
+				// cursor stays on the option.
+				if (selected.size > 0) {
+					optionIndex = allItems.length - 1;
+					refresh();
+				}
 				return;
 			}
 
