@@ -59,9 +59,9 @@ The model calls `ask_user_question` when missing information or a decision mater
 The tool has three question types: **Text**, **Single-select**, and **Multi-select**. Their result `mode` values are `text`, `single-select`, and `multi-select`. A **choice question** means single-select or multi-select. The custom text row is not a fourth type.
 
 - **Text:** Type an answer. Press Enter to submit or Esc to cancel. Empty text answers are permitted.
-- **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. Press Enter on the Submit row to submit. Selecting another option replaces the first.
-- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter on the Submit row to submit at least one answer. Enter on Other opens custom text entry.
-- **Feedback and Other:** Both choice types end with a custom text row. Single-select calls it `[Feedback]` and multi-select calls it `[Other]`. The row takes the next number after the last option, and its number opens the text editor. The row fills as soon as the editor opens, and it clears when you leave the editor empty with Enter or Esc. Press Enter to save the text and Esc to return to the choices. In a single-select question, the extension returns the custom text together with the selected option. Custom text must not be empty.
+- **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. Press Enter on an option row to move the cursor to Submit. Press Enter again to submit. Selecting another option replaces the first.
+- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter on an option row to move the cursor to Submit. Press Enter again to submit at least one answer. Enter on Other opens custom text entry.
+- **Feedback and Other:** Both choice types end with a custom text row. Single-select calls it `[Feedback]` and multi-select calls it `[Other]`. The row takes the next number after the last option. Its number or SPACE opens the text editor. The row fills as soon as the editor opens. Enter saves the text. Enter with empty text clears the saved text. Esc returns to the choices and keeps the saved text. In a single-select question, the extension returns the custom text together with the selected option. Custom text must not be empty.
 - **Cancel:** Press Esc to cancel any question type.
 
 Tool arguments:
@@ -146,7 +146,7 @@ A shared process-level lock serializes dialogs with other extensions that use `_
 
 The extension returns answers to the model through ordinary tool results, which Pi can store in the session. Do not enter secrets. Cancellation is not an authorization policy. This extension is not a security boundary.
 
-Choice rendering caches by terminal width. Large choice lists have no explicit scrolling, filtering, or number shortcuts. The extension collects one question per call. Prompt guidance does not enforce question count or recommendation order.
+Choice rendering caches by terminal width. Keys 1–9 reach the first nine rows only. Up and Down stop at the first and last rows. Large choice lists have no explicit scrolling or filtering. The extension collects one question per call. Prompt guidance does not enforce question count or recommendation order.
 
 ### Attribution
 

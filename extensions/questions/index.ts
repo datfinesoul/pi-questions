@@ -104,7 +104,7 @@ const AskUserQuestionParams = Type.Object({
 	options: Type.Optional(
 		Type.Array(OptionSchema, {
 			description:
-				"Optional multiple-choice options. Omit or pass an empty array for free-form text input. Choice lists always include a custom text row: [Feedback] in single-select and [Other] in multi-select.",
+				"Optional multiple-choice options. Omit or pass an empty array for free-form text input. Choice lists always include a custom text row: [Feedback] in single-select and [Other] in multi-select. If an option has that label, the row reads [Feedback (custom)] or [Other (custom)].",
 		}),
 	),
 	multiSelect: Type.Optional(
@@ -172,15 +172,7 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 					]);
 				}
 
-				if (mode === "single-select") {
-					const answers = await askChoice(ctx, params.question, context, options, 1, signal);
-					if (!answers) {
-						return cancelledResult(params.question, mode, context);
-					}
-					return buildResult(params.question, context, mode, answers);
-				}
-
-				const answers = await askChoice(ctx, params.question, context, options, Number.POSITIVE_INFINITY, signal);
+				const answers = await askChoice(ctx, params.question, context, options, mode, signal);
 				if (!answers) {
 					return cancelledResult(params.question, mode, context);
 				}
@@ -221,8 +213,8 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 				switch (answer.type) {
 					case "text":
 						return `${theme.fg("success", "✓ ")}${theme.fg("accent", answer.label || "(empty response)")}`;
-					case "other":
-						return `${theme.fg("success", "✓ ")}${theme.fg("muted", "Other: ")}${theme.fg("accent", answer.label)}`;
+					case "custom":
+						return `${theme.fg("success", "✓ ")}${theme.fg("muted", `${details.mode === "single-select" ? "Feedback" : "Other"}: `)}${theme.fg("accent", answer.label)}`;
 					case "option":
 						return `${theme.fg("success", "✓ ")}${theme.fg("accent", `${answer.index}. ${answer.label}`)}`;
 				}

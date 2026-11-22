@@ -38,9 +38,9 @@ test('clarification replies reach the model in every input mode without losing s
   const options = [{ label: 'Fix the links', value: 'links' }];
   const cases = [
     [{ question: 'Which findings should I fix?' }, [reply, 'enter'], ['text']],
-    [{ question: 'Which findings should I fix?', options }, ['down', 'enter', reply, 'enter', 'down', 'enter'], ['other']],
-    [{ question: 'Which findings should I fix?', options, multiSelect: true }, ['down', 'enter', reply, 'enter', 'down', 'enter'], ['other']],
-    [{ question: 'Which findings should I fix?', options, multiSelect: true }, ['space', 'down', 'enter', reply, 'enter', 'down', 'enter'], ['option', 'other']],
+    [{ question: 'Which findings should I fix?', options }, ['down', 'enter', reply, 'enter', 'down', 'enter'], ['custom']],
+    [{ question: 'Which findings should I fix?', options, multiSelect: true }, ['down', 'enter', reply, 'enter', 'down', 'enter'], ['custom']],
+    [{ question: 'Which findings should I fix?', options, multiSelect: true }, ['space', 'down', 'enter', reply, 'enter', 'down', 'enter'], ['option', 'custom']],
   ];
   for (const [params, keys, types] of cases) {
     const ctx = ui();
@@ -146,22 +146,28 @@ test('number shortcuts toggle answers in both choice modes', async () => {
     assert.deepEqual(result.details.answers.map(answer => answer.value), multiSelect ? ['1', '9'] : ['1']);
   }
 });
-test('Enter acts on the Submit and Other rows only', async () => {
+test('Enter on an option row moves to Submit and Enter on Submit sends', async () => {
   for (const multiSelect of [false, true]) {
     const ctx = ui();
     const pending = tool.execute('enter-submit', { question: 'Choose?', options: [{ label: 'A' }, { label: 'B' }], multiSelect }, undefined, undefined, ctx);
     await tick();
     ctx.component.handleInput('enter');
     assert.equal(ctx.closes, 0);
-    const rendered = ctx.component.render(120).join('\n');
+    let rendered = ctx.component.render(120).join('\n');
+    assert.match(rendered, /^> Submit$/m);
     assert.match(rendered, /Select at least one answer before submitting/);
-    assert.match(rendered, /^ *Submit$/m);
     assert.doesNotMatch(rendered, /[○●✓] Submit/);
-    ctx.component.handleInput('space');
-    assert.match(ctx.component.render(120).join('\n'), /Submit \(1 selected\)/);
+    ctx.component.handleInput('enter');
+    assert.equal(ctx.closes, 0, 'Submit without a selection stays open');
+    ctx.component.handleInput('1');
+    rendered = ctx.component.render(120).join('\n');
+    assert.match(rendered, /1 ● A/);
+    assert.doesNotMatch(rendered, /selected\)/);
     ctx.component.handleInput('enter');
     assert.equal(ctx.closes, 0);
-    for (const key of ['down', 'down', 'down', 'enter']) ctx.component.handleInput(key);
+    assert.match(ctx.component.render(120).join('\n'), /^> Submit$/m);
+    ctx.component.handleInput('enter');
+    assert.equal(ctx.closes, 1);
     assert.deepEqual((await pending).details.answers.map(answer => answer.value), ['A']);
   }
 });
@@ -249,6 +255,23 @@ test('ctrl+enter submits the selection from any row and from the Other editor', 
   await tick();
   for (const key of ['1', 'down', 'down', 'enter', 'note', 'ctrl+enter']) ctx.component.handleInput(key);
   assert.deepEqual((await pending).details.answers.map(answer => answer.value), ['a', 'note']);
+
+  const cleared = ui();
+  const clearedPending = tool.execute('ctrl-enter-empty-editor', { question: 'Choose?', options }, undefined, undefined, cleared);
+  await tick();
+  for (const key of ['1', 'down', 'down', 'enter', 'ctrl+enter']) cleared.component.handleInput(key);
+  assert.equal(cleared.closes, 1);
+  assert.deepEqual((await clearedPending).details.answers.map(answer => answer.value), ['a']);
+
+  const empty = ui();
+  const emptyPending = tool.execute('ctrl-enter-empty-selection', { question: 'Choose?', options }, undefined, undefined, empty);
+  await tick();
+  for (const key of ['down', 'down', 'enter', 'ctrl+enter']) empty.component.handleInput(key);
+  assert.equal(empty.closes, 0, 'Ctrl+Enter without a selection stays open');
+  assert.match(empty.component.render(120).join('\n'), /Select at least one answer before submitting/);
+  assert.doesNotMatch(empty.component.render(120).join('\n'), /Your answer/);
+  empty.component.handleInput('escape');
+  assert.equal((await emptyPending).details.status, 'cancelled');
 });
 test('Other takes the next number and its number opens the editor', async () => {
   const options = [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }];
@@ -298,6 +321,13 @@ test('the custom row fills when its editor opens and clears only when left empty
   assert.equal(marker(run.rendered), 'filled');
   assert.match(run.rendered, /3 ● \[Feedback\] — note/);
   assert.equal(run.ctx.closes, 0);
+  run.ctx.component.handleInput('space');
+  const editing = run.ctx.component.render(80).join('\n');
+  assert.match(editing, /Your answer/);
+  assert.match(editing, /3 ● \[Feedback\] — note/);
+  run.ctx.component.handleInput('escape');
+  assert.match(run.ctx.component.render(80).join('\n'), /3 ● \[Feedback\] — note/);
+  assert.doesNotMatch(run.ctx.component.render(80).join('\n'), /Your answer/);
   run.ctx.component.handleInput('escape');
   await run.pending;
 });

@@ -25,13 +25,13 @@ export interface OptionAnswer {
 	index: number;
 }
 
-export interface OtherAnswer {
-	type: "other";
+export interface CustomAnswer {
+	type: "custom";
 	label: string;
 	value: string;
 }
 
-export type AskAnswer = TextAnswer | OptionAnswer | OtherAnswer;
+export type AskAnswer = TextAnswer | OptionAnswer | CustomAnswer;
 export type AskUserQuestionStatus = "answered" | "cancelled" | "unavailable";
 export type AskUserQuestionMode = "text" | "single-select" | "multi-select";
 

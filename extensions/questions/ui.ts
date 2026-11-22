@@ -73,10 +73,10 @@ export async function askChoice(
 	question: string,
 	context: string | undefined,
 	options: AskOption[],
-	maxSelections: number,
+	mode: "single-select" | "multi-select",
 	signal?: AbortSignal,
 ): Promise<AskAnswer[] | null> {
-	const single = maxSelections === 1;
+	const single = mode === "single-select";
 	// Single-select words the custom row as feedback: its text can add to one
 	// option or stand alone as the answer, so "Other" reads wrong there.
 	const otherLabel = getOtherLabel(options, single ? "Feedback" : "Other");
@@ -113,7 +113,7 @@ export async function askChoice(
 		// editor opens, so the row follows the user instead of the saved value.
 		function storeOther(value: string) {
 			const trimmed = value.trim();
-			if (trimmed) selected.set("other", { type: "other", label: trimmed, value: trimmed });
+			if (trimmed) selected.set("other", { type: "custom", label: trimmed, value: trimmed });
 			else selected.delete("other");
 			refresh();
 			return trimmed.length > 0;
@@ -142,11 +142,13 @@ export async function askChoice(
 				refresh();
 				return;
 			}
-			// Other text does not count against the limit, so a single answer can
-			// still carry custom text. A full selection is replaced, not extended.
-			const listed = [...selected.keys()].filter((id) => id !== "other");
-			if (listed.length >= maxSelections) {
-				for (const id of listed) selected.delete(id);
+			// A single-select question holds one listed answer, so a new one
+			// replaces the previous one. Custom text does not count, so the answer
+			// can still carry a note.
+			if (single) {
+				for (const id of [...selected.keys()]) {
+					if (id !== "other") selected.delete(id);
+				}
 			}
 			selected.set(item.id, {
 				type: "option",
@@ -160,7 +162,7 @@ export async function askChoice(
 		function handleInput(data: string) {
 			if (matchesKey(data, SUBMIT_ANYWHERE)) {
 				if (editMode) {
-					if (!storeOther(editor.getText())) return;
+					storeOther(editor.getText());
 					editMode = false;
 				}
 				submit();
@@ -205,12 +207,7 @@ export async function askChoice(
 			if (matchesKey(data, Key.space)) {
 				if (current.isSubmit) return;
 				if (current.isOther) {
-					if (selected.has("other")) {
-						selected.delete("other");
-						refresh();
-					} else {
-						editOther();
-					}
+					editOther();
 					return;
 				}
 				toggleOption(current);
@@ -222,10 +219,14 @@ export async function askChoice(
 					editOther();
 					return;
 				}
-				// Enter belongs to the two rows that do something: the editor and
-				// Submit. On an option row it must not confirm a selection made
-				// somewhere else.
-				if (current.isSubmit) submit();
+				if (current.isSubmit) {
+					submit();
+					return;
+				}
+				// Enter on an option row moves the cursor to Submit. It does not
+				// toggle or confirm, so the list stays easy to inspect.
+				optionIndex = allItems.length - 1;
+				refresh();
 				return;
 			}
 
@@ -258,8 +259,8 @@ export async function askChoice(
 				const prefix = isFocused ? theme.fg("accent", "> ") : "  ";
 
 				if (item.isSubmit) {
-					// No selection marker: Submit acts on the selection, it is not one.
-					const label = selected.size > 0 ? `${item.label} (${selected.size} selected)` : item.label;
+					// No marker or count: Submit acts on the selection, it is not one.
+					const label = item.label;
 					const styled = isFocused
 						? theme.fg("accent", theme.bold(label))
 						: theme.fg(selected.size > 0 ? "success" : "dim", theme.bold(label));

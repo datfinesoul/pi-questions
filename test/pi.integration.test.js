@@ -31,13 +31,13 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
   const cases = [
     [{ question: "Text?" }, ["answer", "\r"], "answered", "text"],
     [{ question: "Single?", options }, ["1", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
-    [{ question: "Other?", options }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "other", "custom"],
-    [{ question: "Multi other?", options, multiSelect: true }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "other", "custom"],
+    [{ question: "Other?", options }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "custom", "custom"],
+    [{ question: "Multi other?", options, multiSelect: true }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "custom", "custom"],
     [{ question: "Multi?", options, multiSelect: true }, [" ", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
     [{ question: "Cancel?", options }, ["\x1b"], "cancelled", undefined],
     [{ question: "Clarify text?" }, [clarification, "\r"], "answered", "text"],
-    [{ question: "Clarify other?", options }, ["\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "other", clarification],
-    [{ question: "Clarify multi?", options, multiSelect: true }, ["\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "other", clarification],
+    [{ question: "Clarify other?", options }, ["\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "custom", clarification],
+    [{ question: "Clarify multi?", options, multiSelect: true }, ["\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "custom", clarification],
     [{ question: "Clarify mixed?", options, multiSelect: true }, [" ", "\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "option", clarification],
     [{ question: "Clarify single mixed?", options }, ["1", "\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "option", clarification],
     [{ question: "Ctrl enter?", options }, ["1", "\x1b[13;5u"], "answered", "option"],
@@ -76,7 +76,7 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
     assert.equal(result.details.status, status);
     assert.equal(result.details.answers[0]?.type, answerType);
     const text = result.content[0].text;
-    const custom = result.details.answers.find(answer => answer.type === "other");
+    const custom = result.details.answers.find(answer => answer.type === "custom");
     if (answerType === "text" || custom) {
       assert.match(text, /If the reply asks a question or requests clarification, answer it in prose and end the turn\./);
       assert.match(text, /For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message\./);

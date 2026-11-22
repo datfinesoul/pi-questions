@@ -14,9 +14,9 @@ test("options trim fields, default values, and omit blank labels", () => {
   assert.equal(getOtherLabel([{ label: "Other" }], "Note"), "Note");
 });
 test("multi-select sorts by original index without mutating input", () => {
-  const answers = [{ type: "other", label: "custom", value: "custom" }, { type: "option", label: "B", value: "b", index: 2 }, { type: "option", label: "A", value: "a", index: 1 }];
+  const answers = [{ type: "custom", label: "custom", value: "custom" }, { type: "option", label: "B", value: "b", index: 2 }, { type: "option", label: "A", value: "a", index: 1 }];
   assert.deepEqual(sortAnswers(answers).map(a => a.label), ["A", "B", "custom"]);
-  assert.equal(answers[0].type, "other");
+  assert.equal(answers[0].type, "custom");
 });
 test("results retain question, context, values, and explicit status", () => {
   const answer = { type: "option", label: "A", value: "a", index: 1 };
@@ -30,7 +30,7 @@ test("results retain question, context, values, and explicit status", () => {
 test("custom replies are distinct from listed selections without guessing intent", () => {
   for (const mode of ["single-select", "multi-select"]) {
     for (const label of ["what did the alb guide say?", "explain the ALB finding", "Use a different guide", 'Use the "why?" label']) {
-      const answer = { type: "other", label, value: label };
+      const answer = { type: "custom", label, value: label };
       const result = buildResult("Which findings should I fix?", "Context", mode, [answer]);
       const text = result.content[0].text;
       assert.match(text, /No listed option was selected\./);
@@ -49,7 +49,7 @@ test("mixed multi-select results keep listed selections separate from custom rep
   const answers = [
     { type: "option", label: "Fix the links", value: "links", index: 1 },
     { type: "option", label: "Fix the examples", value: "examples", index: 3 },
-    { type: "other", label: "what did the alb guide say?", value: "what did the alb guide say?" },
+    { type: "custom", label: "what did the alb guide say?", value: "what did the alb guide say?" },
   ];
   const original = structuredClone(answers);
   const result = buildResult("Which findings should I fix?", undefined, "multi-select", answers);

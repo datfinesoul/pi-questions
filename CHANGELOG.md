@@ -9,16 +9,17 @@ All notable changes to this project are documented in this file. The format foll
 ### Added
 
 - Return custom text together with one listed option in a single-select question. The user can select one option, add feedback, or combine both.
-- Number the custom row after the last option and show it in square brackets. Its number opens the text editor, because custom text has no value until the user types one.
+- Number the custom row after the last option and show it in square brackets. Its number or SPACE opens the text editor, because custom text has no value until the user types one. Clear the text and press Enter to remove it.
 
 ### Changed
 
-- Put the option number before the selection circle in choice rows. Show the Submit row in bold without a selection marker, because it acts on the selection and is not one.
+- Put the option number before the selection circle in choice rows. Show the Submit row in bold, with no selection marker or count, because it acts on the selection and is not one.
 - Label the custom row `[Feedback]` in single-select and `[Other]` in multi-select. Single-select custom text can add to one option or stand alone, so the word Other reads wrong there.
-- Fill the custom row circle when its editor opens. Leaving the editor empty with Enter or Esc clears the row.
+- Fill the custom row circle when its editor opens. Enter with empty text clears the saved text. Esc returns to the choices and keeps the saved text.
 - Draw the accent rule above and below a text question, so every dialog has the same frame.
 - Use one choice dialog for both choice modes. Up and Down move the cursor. SPACE selects or toggles the option under the cursor, keys 1–9 select or toggle their numbered option, and a second press clears the selection. A single-select question allows one listed option, and a new option replaces the previous one.
-- Show the Submit row and the empty-selection warning in both choice modes. Enter acts on two rows only: it opens the text editor on the custom row, and it submits on the Submit row. Enter on an option row does nothing, so a selection can be checked before it is sent.
+- Show the Submit row and the empty-selection warning in both choice modes. Enter opens the text editor on the custom row and submits on the Submit row. On an option row it moves the cursor to Submit, so a selection can be checked before it is sent.
+- Report custom text with the answer type `custom` instead of `other`, so the type does not reuse a row label. A single-select result shows that answer as Feedback.
 - Save the custom text with Enter and return to the choice list in both modes. Pressing Enter on the custom row no longer submits the answer.
 
 ## [0.5.1] - 2026-11-19
