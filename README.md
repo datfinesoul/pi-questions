@@ -56,12 +56,12 @@ pi --no-extensions --extension ./extensions/questions/index.ts
 
 The model calls `ask_user_question` when missing information or a decision materially affects the work. The extension adds no slash command or global shortcut.
 
-The tool has three question types: **Text**, **Single-select**, and **Multi-select**. Their result `mode` values are `text`, `single-select`, and `multi-select`. A **choice question** means single-select or multi-select. Other is not a fourth type.
+The tool has three question types: **Text**, **Single-select**, and **Multi-select**. Their result `mode` values are `text`, `single-select`, and `multi-select`. A **choice question** means single-select or multi-select. The custom text row is not a fourth type.
 
 - **Text:** Type an answer. Press Enter to submit or Esc to cancel. Empty text answers are permitted.
-- **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. Press Enter to submit. Selecting another option replaces the first.
-- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter to submit at least one answer. Enter on Other opens custom text entry.
-- **Other:** Select Other to enter custom text. This row appears in both choice types. Other takes the next number after the last option and shows in square brackets, and its number opens the text editor. Press Enter to save the text and Esc to return to the choices. In a single-select question, the extension returns the custom text together with the selected option. Custom text must not be empty.
+- **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. Press Enter on the Submit row to submit. Selecting another option replaces the first.
+- **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter on the Submit row to submit at least one answer. Enter on Other opens custom text entry.
+- **Note and Other:** Both choice types end with a custom text row. Single-select calls it `[Note]` and multi-select calls it `[Other]`. The row takes the next number after the last option, and its number opens the text editor. The row fills as soon as the editor opens, and it clears when you leave the editor empty with Enter or Esc. Press Enter to save the text and Esc to return to the choices. In a single-select question, the extension returns the note together with the selected option. Custom text must not be empty.
 - **Cancel:** Press Esc to cancel any question type.
 
 Tool arguments:
@@ -73,7 +73,7 @@ Tool arguments:
 | `options` | Optional list of `{ label, value?, description? }` objects. Omit it or use an empty list for text input. |
 | `multiSelect` | Set to `true` to permit multiple choices. It has no effect without options. |
 
-Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include Other, numbered after the last option and shown in square brackets. If a supplied option is named Other, the custom entry becomes `[Other (custom)]`. A single-select answer can contain one option and Other text.
+Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include the custom row, numbered after the last option and shown in square brackets: `[Note]` in single-select and `[Other]` in multi-select. If a supplied option has that same name, the row becomes `[Note (custom)]` or `[Other (custom)]`. A single-select answer can contain one option and note text.
 
 Custom text can answer the question or ask for clarification. For clarification, the guidance tells the model to explain and end its turn without repeating or rephrasing the pending decision. After cancellation, the guidance tells the model not to repeat or rephrase the question unless you request it. These instructions depend on model compliance.
 

@@ -9,6 +9,9 @@ test("options trim fields, default values, and omit blank labels", () => {
   ]);
   assert.equal(getOtherLabel([{ label: "OTHER" }]), "Other (custom)");
   assert.equal(getOtherLabel([]), "Other");
+  assert.equal(getOtherLabel([], "Note"), "Note");
+  assert.equal(getOtherLabel([{ label: "note" }], "Note"), "Note (custom)");
+  assert.equal(getOtherLabel([{ label: "Other" }], "Note"), "Note");
 });
 test("multi-select sorts by original index without mutating input", () => {
   const answers = [{ type: "other", label: "custom", value: "custom" }, { type: "option", label: "B", value: "b", index: 2 }, { type: "option", label: "A", value: "a", index: 1 }];

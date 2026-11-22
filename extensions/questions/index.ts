@@ -135,7 +135,7 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Use at most one short sentence for each choice description. State its main benefit or trade-off. Omit descriptions that repeat labels.",
 			"Preserve essential risks, conditions, uncertainty, and technical names. Use more words when needed for a safe, informed choice. Never truncate text to meet a length target.",
 			"Ask only questions that materially affect the work. Use separate calls for distinct decisions, and avoid unnecessary follow-up questions.",
-			'Users will always be able to select "Other" to provide custom text input when options are provided.',
+			'A choice question always offers custom text: the [Note] row in single-select and the [Other] row in multi-select.',
 			'For a single-select question, the user can select one option, Other text, or both together.',
 			"Use multiSelect: true when options are independent and any combination can be valid. Keep options as distinct answers; do not fold their combinations into additional options.",
 			"Express related decisions as separate options in one multi-select, or as separate questions in separate calls. Do not pre-combine decision dimensions into options.",
@@ -195,7 +195,8 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 				text += theme.fg("dim", " [multi-select]");
 			}
 			if (options.length > 0) {
-				const labels = [...options.map((option) => option.label), getOtherLabel(options)].join(", ");
+				const custom = getOtherLabel(options, args.multiSelect ? "Other" : "Note");
+				const labels = [...options.map((option) => option.label), `[${custom}]`].join(", ");
 				text += `\n${theme.fg("dim", `  Options: ${labels}`)}`;
 			}
 			return new Text(text, 0, 0);

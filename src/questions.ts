@@ -9,8 +9,10 @@ export function normalizeOptions(options) {
     .filter((option) => option.label.length > 0);
 }
 
-export function getOtherLabel(options) {
-  return options.some((option) => option.label.toLowerCase() === "other") ? "Other (custom)" : "Other";
+export function getOtherLabel(options, base = "Other") {
+  return options.some((option) => option.label.toLowerCase() === base.toLowerCase())
+    ? `${base} (custom)`
+    : base;
 }
 
 function formatSelectionForModel(mode, answers) {

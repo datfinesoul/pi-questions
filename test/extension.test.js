@@ -125,7 +125,8 @@ test('number shortcuts toggle answers in both choice modes', async () => {
     assert.match(rendered, /1-9/);
     assert.match(rendered, /> 1 ○ Choice 1/);
     assert.match(rendered, /· ○ Choice 10/);
-    assert.match(rendered, /· ○ \[Other\]/);
+    const custom = multiSelect ? 'Other' : 'Note';
+    assert.match(rendered, new RegExp(`· ○ \\[${custom}\\]`));
     assert.doesNotMatch(rendered, /11 ○/);
     assert.doesNotMatch(rendered, /\[ \]/);
     for (const key of ['0', 'x', '12']) ctx.component.handleInput(key);
@@ -140,26 +141,27 @@ test('number shortcuts toggle answers in both choice modes', async () => {
     assert.match(rendered, /1 ● Choice 1/);
     assert.equal(/9 ● Choice 9/.test(rendered), multiSelect);
     assert.equal(ctx.closes, 0);
-    ctx.component.handleInput('enter');
+    ctx.component.handleInput('ctrl+enter');
     const result = await pending;
     assert.deepEqual(result.details.answers.map(answer => answer.value), multiSelect ? ['1', '9'] : ['1']);
   }
 });
-test('Enter submits from any row only when an answer is selected', async () => {
+test('Enter acts on the Submit and Other rows only', async () => {
   for (const multiSelect of [false, true]) {
     const ctx = ui();
     const pending = tool.execute('enter-submit', { question: 'Choose?', options: [{ label: 'A' }, { label: 'B' }], multiSelect }, undefined, undefined, ctx);
     await tick();
     ctx.component.handleInput('enter');
     assert.equal(ctx.closes, 0);
-    let rendered = ctx.component.render(120).join('\n');
+    const rendered = ctx.component.render(120).join('\n');
     assert.match(rendered, /Select at least one answer before submitting/);
     assert.match(rendered, /^ *Submit$/m);
     assert.doesNotMatch(rendered, /[○●✓] Submit/);
     ctx.component.handleInput('space');
     assert.match(ctx.component.render(120).join('\n'), /Submit \(1 selected\)/);
-    ctx.component.handleInput('down');
     ctx.component.handleInput('enter');
+    assert.equal(ctx.closes, 0);
+    for (const key of ['down', 'down', 'down', 'enter']) ctx.component.handleInput(key);
     assert.deepEqual((await pending).details.answers.map(answer => answer.value), ['A']);
   }
 });
@@ -187,7 +189,7 @@ test('text, choices, custom answers, and multi-select preserve values', async ()
   const options = [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }];
   const cases = [
     [{ question: 'Text?' }, [' typed ', 'enter'], ['typed']],
-    [{ question: 'Single?', options }, ['2', 'enter'], ['b']],
+    [{ question: 'Single?', options }, ['2', 'ctrl+enter'], ['b']],
     [{ question: 'Other?', options }, ['down', 'down', 'enter', ' custom ', 'enter', 'down', 'enter'], ['custom']],
     [{ question: 'Multi?', options, multiSelect: true }, ['down', 'space', 'up', 'space', 'down', 'down', 'down', 'enter'], ['a', 'b']],
   ];
@@ -227,7 +229,7 @@ test('single-select answers can combine one option with Other text', async () =>
   ctx = ui();
   pending = tool.execute('single-replace', { question: 'Choose?', options }, undefined, undefined, ctx);
   await tick();
-  for (const key of ['1', '2', 'enter']) ctx.component.handleInput(key);
+  for (const key of ['1', '2', 'ctrl+enter']) ctx.component.handleInput(key);
   assert.deepEqual((await pending).details.answers.map(answer => answer.value), ['b']);
 });
 test('ctrl+enter submits the selection from any row and from the Other editor', async () => {
@@ -253,15 +255,49 @@ test('Other takes the next number and its number opens the editor', async () => 
   const ctx = ui();
   const pending = tool.execute('other-number', { question: 'Choose?', options }, undefined, undefined, ctx);
   await tick();
-  assert.match(ctx.component.render(80).join('\n'), /3 ○ \[Other\]/);
-  for (const key of ['3', 'note', 'enter', '1', 'enter']) ctx.component.handleInput(key);
+  assert.match(ctx.component.render(80).join('\n'), /3 ○ \[Note\]/);
+  for (const key of ['3', 'note', 'enter', '1', 'ctrl+enter']) ctx.component.handleInput(key);
   const result = await pending;
   assert.deepEqual(result.details.answers.map(answer => answer.value), ['a', 'note']);
 
   const labelled = ui();
-  const second = tool.execute('other-labelled', { question: 'Pick?', options: [{ label: 'Other' }] }, undefined, undefined, labelled);
+  const second = tool.execute('other-labelled', { question: 'Pick?', options: [{ label: 'Note' }] }, undefined, undefined, labelled);
   await tick();
-  assert.match(labelled.component.render(80).join('\n'), /2 ○ \[Other \(custom\)\]/);
+  assert.match(labelled.component.render(80).join('\n'), /2 ○ \[Note \(custom\)\]/);
   labelled.component.handleInput('escape');
   assert.equal((await second).details.status, 'cancelled');
+});
+test('the custom row fills when its editor opens and clears only when left empty', async () => {
+  const options = [{ label: 'A' }, { label: 'B' }];
+  const marker = (rendered) => (/3 ● \[Note\]/.test(rendered) ? 'filled' : /3 ○ \[Note\]/.test(rendered) ? 'empty' : 'other');
+  const open = async (keys) => {
+    const ctx = ui();
+    const pending = tool.execute('note-marker', { question: 'Choose?', options }, undefined, undefined, ctx);
+    await tick();
+    let rendered = '';
+    for (const key of keys) {
+      ctx.component.handleInput(key);
+      rendered = ctx.component.render(80).join('\n');
+    }
+    return { ctx, pending, rendered };
+  };
+
+  let run = await open(['down', 'down', 'enter']);
+  assert.equal(marker(run.rendered), 'filled');
+  run.ctx.component.handleInput('escape');
+  assert.equal(marker(run.ctx.component.render(80).join('\n')), 'empty');
+  run.ctx.component.handleInput('escape');
+  assert.equal((await run.pending).details.status, 'cancelled');
+
+  run = await open(['down', 'down', 'enter', 'enter']);
+  assert.equal(marker(run.rendered), 'empty');
+  run.ctx.component.handleInput('escape');
+  await run.pending;
+
+  run = await open(['down', 'down', 'enter', 'note', 'enter']);
+  assert.equal(marker(run.rendered), 'filled');
+  assert.match(run.rendered, /3 ● \[Note\] — note/);
+  assert.equal(run.ctx.closes, 0);
+  run.ctx.component.handleInput('escape');
+  await run.pending;
 });

@@ -14,9 +14,11 @@ All notable changes to this project are documented in this file. The format foll
 ### Changed
 
 - Put the option number before the selection circle in choice rows. Show the Submit row in bold without a selection marker, because it acts on the selection and is not one.
+- Label the custom row `[Note]` in single-select and `[Other]` in multi-select. A single-select note can add to one option, so the word Other reads wrong there.
+- Fill the custom row circle when its editor opens. Clear the row only when the editor is left empty with Enter or Esc.
 - Draw the accent rule above and below a text question, so every dialog has the same frame.
 - Use one choice dialog for both choice modes. Up and Down move the cursor. SPACE or keys 1–9 select the row under the cursor, and a second press clears it. A single-select question allows one listed option, and a new option replaces the previous one.
-- Show the Submit row and the empty-selection warning in both choice modes. Enter submits from any row except Other, and Enter on Other still opens custom text entry.
+- Show the Submit row and the empty-selection warning in both choice modes. Enter acts on two rows only: it opens the text editor on Other, and it submits on the Submit row. Enter on an option row does nothing, so a selection can be checked before it is sent.
 - Save Other text with Enter and return to the choice list in both modes. Pressing Enter on Other no longer submits the answer.
 
 ## [0.5.1] - 2026-11-19

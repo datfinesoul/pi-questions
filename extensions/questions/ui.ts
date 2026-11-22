@@ -76,8 +76,10 @@ export async function askChoice(
 	maxSelections: number,
 	signal?: AbortSignal,
 ): Promise<AskAnswer[] | null> {
-	const otherLabel = getOtherLabel(options);
 	const single = maxSelections === 1;
+	// Single-select words the custom row as a note: it can add to one option
+	// instead of replacing it, so "Other" reads wrong there.
+	const otherLabel = getOtherLabel(options, single ? "Note" : "Other");
 	const choiceItems: DisplayOption[] = options.map((option, index) => ({
 		...option,
 		id: `option:${index}`,
@@ -107,13 +109,14 @@ export async function askChoice(
 			tui.requestRender();
 		}
 
-		function saveOther(value: string) {
+		// Empty input clears the row. The renderer fills the circle as soon as the
+		// editor opens, so the row follows the user instead of the saved value.
+		function storeOther(value: string) {
 			const trimmed = value.trim();
-			if (!trimmed) return false;
-			selected.set("other", { type: "other", label: trimmed, value: trimmed });
-			editMode = false;
+			if (trimmed) selected.set("other", { type: "other", label: trimmed, value: trimmed });
+			else selected.delete("other");
 			refresh();
-			return true;
+			return trimmed.length > 0;
 		}
 
 		function submit() {
@@ -128,7 +131,9 @@ export async function askChoice(
 		}
 
 		editor.onSubmit = (value) => {
-			saveOther(value);
+			storeOther(value);
+			editMode = false;
+			refresh();
 		};
 
 		function toggleOption(item: DisplayOption) {
@@ -154,7 +159,10 @@ export async function askChoice(
 
 		function handleInput(data: string) {
 			if (matchesKey(data, SUBMIT_ANYWHERE)) {
-				if (editMode && !saveOther(editor.getText())) return;
+				if (editMode) {
+					if (!storeOther(editor.getText())) return;
+					editMode = false;
+				}
 				submit();
 				return;
 			}
@@ -214,7 +222,10 @@ export async function askChoice(
 					editOther();
 					return;
 				}
-				submit();
+				// Enter belongs to the two rows that do something: the editor and
+				// Submit. On an option row it must not confirm a selection made
+				// somewhere else.
+				if (current.isSubmit) submit();
 				return;
 			}
 
@@ -258,7 +269,8 @@ export async function askChoice(
 
 				if (item.isOther) {
 					const other = selected.get("other");
-					const marker = other ? theme.fg("success", "●") : theme.fg("dim", "○");
+					const opened = Boolean(other) || editMode;
+					const marker = opened ? theme.fg("success", "●") : theme.fg("dim", "○");
 					const suffix = other ? ` — ${other.label}` : "";
 					const number = item.index! <= 9 ? String(item.index) : "·";
 					add(`${prefix}${number} ${marker} ${theme.fg("text", `${item.label}${suffix}`)}`);
@@ -285,7 +297,7 @@ export async function askChoice(
 					add(theme.fg("warning", " Select at least one answer before submitting."));
 				}
 				const action = single ? "select" : "toggle";
-				add(theme.fg("dim", ` ↑↓ navigate • 1-9/${theme.bold("SPACE")} ${action} • Enter submit/Other edit • Esc cancel`));
+				add(theme.fg("dim", ` ↑↓ navigate • 1-9/${theme.bold("SPACE")} ${action} • Enter Submit/Other • Esc cancel`));
 			}
 
 			add(theme.fg("accent", "─".repeat(width)));

@@ -30,7 +30,7 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
   const clarification = "what did the alb guide say?";
   const cases = [
     [{ question: "Text?" }, ["answer", "\r"], "answered", "text"],
-    [{ question: "Single?", options }, ["1", "\r"], "answered", "option"],
+    [{ question: "Single?", options }, ["1", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
     [{ question: "Other?", options }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "other", "custom"],
     [{ question: "Multi other?", options, multiSelect: true }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "other", "custom"],
     [{ question: "Multi?", options, multiSelect: true }, [" ", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
