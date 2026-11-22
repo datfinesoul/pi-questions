@@ -125,7 +125,7 @@ test('number shortcuts toggle answers in both choice modes', async () => {
     assert.match(rendered, /1-9/);
     assert.match(rendered, /> 1 ○ Choice 1/);
     assert.match(rendered, /· ○ Choice 10/);
-    const custom = multiSelect ? 'Other' : 'Note';
+    const custom = multiSelect ? 'Other' : 'Feedback';
     assert.match(rendered, new RegExp(`· ○ \\[${custom}\\]`));
     assert.doesNotMatch(rendered, /11 ○/);
     assert.doesNotMatch(rendered, /\[ \]/);
@@ -204,7 +204,7 @@ test('text, choices, custom answers, and multi-select preserve values', async ()
     assert.deepEqual(result.details.answers.map(answer => answer.value), values);
   }
 });
-test('single-select answers can combine one option with Other text', async () => {
+test('single-select answers can combine one option with custom text', async () => {
   const options = [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }];
   let ctx = ui();
   let pending = tool.execute('single-mixed', { question: 'Choose?', options }, undefined, undefined, ctx);
@@ -255,21 +255,21 @@ test('Other takes the next number and its number opens the editor', async () => 
   const ctx = ui();
   const pending = tool.execute('other-number', { question: 'Choose?', options }, undefined, undefined, ctx);
   await tick();
-  assert.match(ctx.component.render(80).join('\n'), /3 ○ \[Note\]/);
+  assert.match(ctx.component.render(80).join('\n'), /3 ○ \[Feedback\]/);
   for (const key of ['3', 'note', 'enter', '1', 'ctrl+enter']) ctx.component.handleInput(key);
   const result = await pending;
   assert.deepEqual(result.details.answers.map(answer => answer.value), ['a', 'note']);
 
   const labelled = ui();
-  const second = tool.execute('other-labelled', { question: 'Pick?', options: [{ label: 'Note' }] }, undefined, undefined, labelled);
+  const second = tool.execute('other-labelled', { question: 'Pick?', options: [{ label: 'Feedback' }] }, undefined, undefined, labelled);
   await tick();
-  assert.match(labelled.component.render(80).join('\n'), /2 ○ \[Note \(custom\)\]/);
+  assert.match(labelled.component.render(80).join('\n'), /2 ○ \[Feedback \(custom\)\]/);
   labelled.component.handleInput('escape');
   assert.equal((await second).details.status, 'cancelled');
 });
 test('the custom row fills when its editor opens and clears only when left empty', async () => {
   const options = [{ label: 'A' }, { label: 'B' }];
-  const marker = (rendered) => (/3 ● \[Note\]/.test(rendered) ? 'filled' : /3 ○ \[Note\]/.test(rendered) ? 'empty' : 'other');
+  const marker = (rendered) => (/3 ● \[Feedback\]/.test(rendered) ? 'filled' : /3 ○ \[Feedback\]/.test(rendered) ? 'empty' : 'other');
   const open = async (keys) => {
     const ctx = ui();
     const pending = tool.execute('note-marker', { question: 'Choose?', options }, undefined, undefined, ctx);
@@ -296,7 +296,7 @@ test('the custom row fills when its editor opens and clears only when left empty
 
   run = await open(['down', 'down', 'enter', 'note', 'enter']);
   assert.equal(marker(run.rendered), 'filled');
-  assert.match(run.rendered, /3 ● \[Note\] — note/);
+  assert.match(run.rendered, /3 ● \[Feedback\] — note/);
   assert.equal(run.ctx.closes, 0);
   run.ctx.component.handleInput('escape');
   await run.pending;

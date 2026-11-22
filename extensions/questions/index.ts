@@ -104,7 +104,7 @@ const AskUserQuestionParams = Type.Object({
 	options: Type.Optional(
 		Type.Array(OptionSchema, {
 			description:
-				"Optional multiple-choice options. Omit or pass an empty array for free-form text input. Users will always be able to choose Other and type a custom answer when options are provided.",
+				"Optional multiple-choice options. Omit or pass an empty array for free-form text input. Choice lists always include a custom text row: [Feedback] in single-select and [Other] in multi-select.",
 		}),
 	),
 	multiSelect: Type.Optional(
@@ -135,8 +135,8 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Use at most one short sentence for each choice description. State its main benefit or trade-off. Omit descriptions that repeat labels.",
 			"Preserve essential risks, conditions, uncertainty, and technical names. Use more words when needed for a safe, informed choice. Never truncate text to meet a length target.",
 			"Ask only questions that materially affect the work. Use separate calls for distinct decisions, and avoid unnecessary follow-up questions.",
-			'A choice question always offers custom text: the [Note] row in single-select and the [Other] row in multi-select.',
-			'For a single-select question, the user can select one option, Other text, or both together.',
+			'A choice question always offers custom text: the [Feedback] row in single-select and the [Other] row in multi-select.',
+			'For a single-select question, the user can select one option, custom text, or both together.',
 			"Use multiSelect: true when options are independent and any combination can be valid. Keep options as distinct answers; do not fold their combinations into additional options.",
 			"Express related decisions as separate options in one multi-select, or as separate questions in separate calls. Do not pre-combine decision dimensions into options.",
 			'Present neutral options and let the user analyze them. Do not mark or order options by preference. In details, state only facts: applicable project rules, constraints, and what each option changes.',
@@ -195,7 +195,7 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 				text += theme.fg("dim", " [multi-select]");
 			}
 			if (options.length > 0) {
-				const custom = getOtherLabel(options, args.multiSelect ? "Other" : "Note");
+				const custom = getOtherLabel(options, args.multiSelect ? "Other" : "Feedback");
 				const labels = [...options.map((option) => option.label), `[${custom}]`].join(", ");
 				text += `\n${theme.fg("dim", `  Options: ${labels}`)}`;
 			}

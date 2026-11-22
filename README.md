@@ -61,7 +61,7 @@ The tool has three question types: **Text**, **Single-select**, and **Multi-sele
 - **Text:** Type an answer. Press Enter to submit or Esc to cancel. Empty text answers are permitted.
 - **Single-select:** Use Up and Down to move the cursor. Press **SPACE** or the option number to select it, and press it again to clear the selection. Press Enter on the Submit row to submit. Selecting another option replaces the first.
 - **Multi-select:** Use **SPACE** to toggle an option, or press 1–9 to toggle that numbered option. Press Enter on the Submit row to submit at least one answer. Enter on Other opens custom text entry.
-- **Note and Other:** Both choice types end with a custom text row. Single-select calls it `[Note]` and multi-select calls it `[Other]`. The row takes the next number after the last option, and its number opens the text editor. The row fills as soon as the editor opens, and it clears when you leave the editor empty with Enter or Esc. Press Enter to save the text and Esc to return to the choices. In a single-select question, the extension returns the note together with the selected option. Custom text must not be empty.
+- **Feedback and Other:** Both choice types end with a custom text row. Single-select calls it `[Feedback]` and multi-select calls it `[Other]`. The row takes the next number after the last option, and its number opens the text editor. The row fills as soon as the editor opens, and it clears when you leave the editor empty with Enter or Esc. Press Enter to save the text and Esc to return to the choices. In a single-select question, the extension returns the custom text together with the selected option. Custom text must not be empty.
 - **Cancel:** Press Esc to cancel any question type.
 
 Tool arguments:
@@ -73,7 +73,7 @@ Tool arguments:
 | `options` | Optional list of `{ label, value?, description? }` objects. Omit it or use an empty list for text input. |
 | `multiSelect` | Set to `true` to permit multiple choices. It has no effect without options. |
 
-Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include the custom row, numbered after the last option and shown in square brackets: `[Note]` in single-select and `[Other]` in multi-select. If a supplied option has that same name, the row becomes `[Note (custom)]` or `[Other (custom)]`. A single-select answer can contain one option and note text.
+Option labels, values, and descriptions lose surrounding whitespace. A missing or blank value defaults to its label. Blank labels are omitted. Choice lists always include the custom row, numbered after the last option and shown in square brackets: `[Feedback]` in single-select and `[Other]` in multi-select. If a supplied option has that same name, the row becomes `[Feedback (custom)]` or `[Other (custom)]`. A single-select answer can contain one option and custom text.
 
 Custom text can answer the question or ask for clarification. For clarification, the guidance tells the model to explain and end its turn without repeating or rephrasing the pending decision. After cancellation, the guidance tells the model not to repeat or rephrase the question unless you request it. These instructions depend on model compliance.
 
@@ -167,7 +167,7 @@ npm run pack:check
 
 Use `pnpm test` and `pnpm run pack:check` with pnpm. The deterministic tests use dependency-free host doubles and Node.js type stripping. Set `PI_CODING_AGENT_ENTRY` to an installed Pi `dist/index.js` to enable tests with real host modules. Without that variable, the installed-Pi test reports a skip.
 
-Manual checks remain necessary. Run `/reload`, then test text, both choice modes, Other, one option with Other text, cancellation, terminal resizing, and focus with your terminal and theme. Check regular and fullscreen modes. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Manual checks remain necessary. Run `/reload`, then test text, both choice modes, custom text, one option with custom text, cancellation, terminal resizing, and focus with your terminal and theme. Check regular and fullscreen modes. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

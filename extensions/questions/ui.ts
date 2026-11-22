@@ -77,9 +77,9 @@ export async function askChoice(
 	signal?: AbortSignal,
 ): Promise<AskAnswer[] | null> {
 	const single = maxSelections === 1;
-	// Single-select words the custom row as a note: it can add to one option
-	// instead of replacing it, so "Other" reads wrong there.
-	const otherLabel = getOtherLabel(options, single ? "Note" : "Other");
+	// Single-select words the custom row as feedback: its text can add to one
+	// option or stand alone as the answer, so "Other" reads wrong there.
+	const otherLabel = getOtherLabel(options, single ? "Feedback" : "Other");
 	const choiceItems: DisplayOption[] = options.map((option, index) => ({
 		...option,
 		id: `option:${index}`,
