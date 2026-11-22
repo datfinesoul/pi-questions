@@ -316,13 +316,16 @@ test('the custom row fills when its editor opens and clears only when left empty
 
   run = await open(['down', 'down', 'enter', 'enter']);
   assert.equal(marker(run.rendered), 'empty');
+  assert.match(run.rendered, /^> 3 ○ \[Feedback\]$/m);
   run.ctx.component.handleInput('escape');
   await run.pending;
 
   run = await open(['down', 'down', 'enter', 'note', 'enter']);
   assert.equal(marker(run.rendered), 'filled');
   assert.match(run.rendered, /3 ● \[Feedback\] — note/);
+  assert.match(run.rendered, /^> Submit$/m);
   assert.equal(run.ctx.closes, 0);
+  run.ctx.component.handleInput('up');
   run.ctx.component.handleInput('space');
   const editing = run.ctx.component.render(80).join('\n');
   assert.match(editing, /Your answer/);

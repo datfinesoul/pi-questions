@@ -131,8 +131,11 @@ export async function askChoice(
 		}
 
 		editor.onSubmit = (value) => {
-			storeOther(value);
+			const saved = storeOther(value);
 			editMode = false;
+			// A filled custom row moves the cursor to Submit, so one more Enter
+			// sends the answer. Empty text leaves the cursor on the row.
+			if (saved) optionIndex = allItems.length - 1;
 			refresh();
 		};
 
