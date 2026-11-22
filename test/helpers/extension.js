@@ -16,6 +16,7 @@ export class Text { constructor(text) { this.text = text; } }
 export class Editor {
   text = ''; focused = false;
   setText(text) { this.text = text; }
+  getText() { return this.text; }
   invalidate() {}
   handleInput(data) { if (data === 'enter') this.onSubmit?.(this.text); else this.text += data; }
   render(width) { return [truncateToWidth(this.text, width)]; }

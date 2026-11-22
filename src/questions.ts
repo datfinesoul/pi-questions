@@ -9,8 +9,10 @@ export function normalizeOptions(options) {
     .filter((option) => option.label.length > 0);
 }
 
-export function getOtherLabel(options) {
-  return options.some((option) => option.label.toLowerCase() === "other") ? "Other (custom)" : "Other";
+export function getOtherLabel(options, base = "Other") {
+  return options.some((option) => option.label.toLowerCase() === base.toLowerCase())
+    ? `${base} (custom)`
+    : base;
 }
 
 function formatSelectionForModel(mode, answers) {
@@ -30,7 +32,7 @@ const CLARIFICATION_GUIDANCE = [
 function answerSortRank(answer) {
   switch (answer.type) {
     case "option": return answer.index;
-    case "other": return Number.MAX_SAFE_INTEGER - 1;
+    case "custom": return Number.MAX_SAFE_INTEGER - 1;
     case "text": return Number.MAX_SAFE_INTEGER;
   }
 }
@@ -67,7 +69,7 @@ export function buildResult(question, context, mode, answers) {
       : "User submitted an empty response";
   } else {
     const selected = answers.filter((answer) => answer.type === "option");
-    const custom = answers.filter((answer) => answer.type === "other");
+    const custom = answers.filter((answer) => answer.type === "custom");
     if (custom.length > 0) {
       text = [
         selected.length > 0 ? formatSelectionForModel(mode, selected) : "No listed option was selected.",

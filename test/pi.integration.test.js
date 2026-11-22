@@ -27,19 +27,23 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
   assert.equal(tool.exposure, "model-only");
   assert.ok(tool.promptGuidelines.some(line => line.includes("answer it in prose and end the turn")));
   const options = [{ label: "First", value: "first", description: "A longer description that wraps on narrow terminals." }];
+  const clarification = "what did the alb guide say?";
   const cases = [
     [{ question: "Text?" }, ["answer", "\r"], "answered", "text"],
-    [{ question: "Single?", options }, ["\r"], "answered", "option"],
-    [{ question: "Other?", options }, ["\x1b[B", "\r", "custom", "\r"], "answered", "other"],
-    [{ question: "Multi other?", options, multiSelect: true }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "other"],
+    [{ question: "Single?", options }, ["1", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
+    [{ question: "Other?", options }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "custom", "custom"],
+    [{ question: "Multi other?", options, multiSelect: true }, ["\x1b[B", "\r", "custom", "\r", "\x1b[B", "\r"], "answered", "custom", "custom"],
     [{ question: "Multi?", options, multiSelect: true }, [" ", "\x1b[B", "\x1b[B", "\r"], "answered", "option"],
     [{ question: "Cancel?", options }, ["\x1b"], "cancelled", undefined],
-    [{ question: "Clarify text?" }, ["what did the alb guide say?", "\r"], "answered", "text"],
-    [{ question: "Clarify other?", options }, ["\x1b[B", "\r", "what did the alb guide say?", "\r"], "answered", "other"],
-    [{ question: "Clarify multi?", options, multiSelect: true }, ["\x1b[B", "\r", "what did the alb guide say?", "\r", "\x1b[B", "\r"], "answered", "other"],
-    [{ question: "Clarify mixed?", options, multiSelect: true }, [" ", "\x1b[B", "\r", "what did the alb guide say?", "\r", "\x1b[B", "\r"], "answered", "option"],
+    [{ question: "Clarify text?" }, [clarification, "\r"], "answered", "text"],
+    [{ question: "Clarify other?", options }, ["\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "custom", clarification],
+    [{ question: "Clarify multi?", options, multiSelect: true }, ["\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "custom", clarification],
+    [{ question: "Clarify mixed?", options, multiSelect: true }, [" ", "\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "option", clarification],
+    [{ question: "Clarify single mixed?", options }, ["1", "\x1b[B", "\r", clarification, "\r", "\x1b[B", "\r"], "answered", "option", clarification],
+    [{ question: "Ctrl enter?", options }, ["1", "\x1b[13;5u"], "answered", "option"],
+    [{ question: "Ctrl enter note?", options }, ["1", "\x1b[B", "\x1b[B", "\r", "note", "\x1b[13;5u"], "answered", "option", "note"],
   ];
-  for (const [params, keys, status, answerType] of cases) {
+  for (const [params, keys, status, answerType, customText] of cases) {
     const result = await tool.execute("test", params, undefined, undefined, {
       mode: "tui", hasUI: true,
       ui: { custom(factory) {
@@ -72,16 +76,17 @@ test("installed Pi: tool registration, all answers, cancellation, and resize", {
     assert.equal(result.details.status, status);
     assert.equal(result.details.answers[0]?.type, answerType);
     const text = result.content[0].text;
-    if (answerType === "text" || result.details.answers.some(answer => answer.type === "other")) {
+    const custom = result.details.answers.find(answer => answer.type === "custom");
+    if (answerType === "text" || custom) {
       assert.match(text, /If the reply asks a question or requests clarification, answer it in prose and end the turn\./);
       assert.match(text, /For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message\./);
     }
-    if (result.details.answers.some(answer => answer.type === "other")) {
+    if (custom) {
       assert.match(text, /User supplied a custom reply:/);
-      if (answerType === "option") {
-        assert.match(text, /User selected:\n- 1\. First/);
+      assert.equal(custom.value, customText);
+      if (result.details.answers.some(answer => answer.type === "option")) {
+        assert.match(text, params.multiSelect ? /User selected:\n- 1\. First/ : /User selected: 1\. First/);
         assert.doesNotMatch(text, /No listed option was selected/);
-        assert.equal(result.details.answers[1].value, "what did the alb guide say?");
       } else {
         assert.match(text, /No listed option was selected\./);
       }
