@@ -6,7 +6,7 @@ const tool = await loadTool();
 test('tool guidance requests concise wording without losing decision-critical information', () => {
   const guidance = tool.promptGuidelines.join('\n');
   assert.match(guidance, /STE100-inspired/);
-  assert.match(guidance, /Omit details unless/);
+  assert.match(guidance, /Omit details when the question and choices are clear/);
   assert.match(guidance, /usually 50 words or fewer/);
   assert.match(guidance, /Name the concrete change and its effect on the user\./);
   assert.match(guidance, /Do not refer to code identifiers, file paths, or a list position/);
@@ -19,11 +19,13 @@ test('tool guidance requests concise wording without losing decision-critical in
   assert.match(fields.options.items.properties.label.description, /2–6 words/);
   assert.match(fields.options.items.properties.description.description, /one short sentence/);
 });
-test('tool guidance keeps references clear and separates answers from execution approval', () => {
+test('tool guidance puts decision context before the call and keeps references clear', () => {
   const guidance = tool.promptGuidelines.join('\n');
-  assert.match(guidance, /Make each question self-contained/);
-  assert.match(guidance, /use a clear reference and briefly name the proposal/);
+  assert.match(guidance, /Before the ask_user_question call, write one short message with the context the user needs to decide\./);
+  assert.match(guidance, /This message does not replace the tool call\./);
+  assert.match(guidance, /Keep the question and choices short, and refer to that message by a named subject\./);
   assert.match(guidance, /Do not rely only on positions/);
+  assert.match(guidance, /must still make sense when the message has scrolled away/);
   assert.match(guidance, /authorization only for the action explicitly asked about/);
   assert.match(guidance, /Selecting an approach does not by itself authorize its execution/);
   assert.match(guidance, /Cancellation, unavailable UI, and empty text do not imply approval/);
