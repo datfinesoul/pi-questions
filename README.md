@@ -56,7 +56,7 @@ pi --no-extensions --extension ./extensions/questions/index.ts
 
 The model calls `ask_user_question` when missing information or a decision materially affects the work. The extension adds no slash command or global shortcut.
 
-Before the call, the model can write one short message with the context for the decision. The message states the facts, the trade-off, and any constraint. The dialog then asks a short question and refers to that message by a named subject, such as a plan name. The question and choices still make sense when the message has scrolled away. Context that must stay visible while the dialog is open belongs in `details`.
+Before the call, the model writes one short message with the context for the decision. The message states the facts, the trade-off, and any constraint. The dialog then asks a short question and refers to that message by a named subject, such as a plan name. The question and choices still make sense when the message has scrolled away. Context that must stay visible while the dialog is open belongs in `details`.
 
 The tool has three question types: **Text**, **Single-select**, and **Multi-select**. Their result `mode` values are `text`, `single-select`, and `multi-select`. A **choice question** means single-select or multi-select. The custom text row is not a fourth type.
 

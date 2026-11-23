@@ -20,7 +20,7 @@ const RULE_LINES = [
   "",
   "When the next step depends on a choice, call the `ask_user_question` tool before you continue, unless an exception below applies.",
   "Do not list open decisions as prose, except as allowed below.",
-  "You may write one short context message before the tool call. It states the facts the user needs to decide. It does not replace the tool call.",
+  "Write one short message before the tool call with the context the user needs to decide. It does not replace the tool call.",
   "Ask one question per tool call.",
   "Give options when the choices are known.",
   "If the user replies with a question or asks for clarification, answer it in prose and end the turn.",
