@@ -56,6 +56,8 @@ pi --no-extensions --extension ./extensions/questions/index.ts
 
 The model calls `ask_user_question` when missing information or a decision materially affects the work. The extension adds no slash command or global shortcut.
 
+Before the call, the model can write one short message with the context for the decision. The message states the facts, the trade-off, and any constraint. The dialog then asks a short question and refers to that message by a named subject, such as a plan name. The question and choices still make sense when the message has scrolled away. Context that must stay visible while the dialog is open belongs in `details`.
+
 The tool has three question types: **Text**, **Single-select**, and **Multi-select**. Their result `mode` values are `text`, `single-select`, and `multi-select`. A **choice question** means single-select or multi-select. The custom text row is not a fourth type.
 
 - **Text:** Type an answer. Press Enter to submit or Esc to cancel. Empty text answers are permitted.
@@ -69,7 +71,7 @@ Tool arguments:
 | Field | Meaning |
 | --- | --- |
 | `question` | One direct question. |
-| `details` | Optional context needed for the decision. |
+| `details` | Optional context the user must see while the dialog is open. Longer context belongs in the message before the call. |
 | `options` | Optional list of `{ label, value?, description? }` objects. Omit it or use an empty list for text input. |
 | `multiSelect` | Set to `true` to permit multiple choices. It has no effect without options. |
 
@@ -146,7 +148,7 @@ A shared process-level lock serializes dialogs with other extensions that use `_
 
 The extension returns answers to the model through ordinary tool results, which Pi can store in the session. Do not enter secrets. Cancellation is not an authorization policy. This extension is not a security boundary.
 
-Choice rendering caches by terminal width. Keys 1–9 reach the first nine rows only. Up and Down stop at the first and last rows. Large choice lists have no explicit scrolling or filtering. The extension collects one question per call. Prompt guidance does not enforce question count or recommendation order.
+Choice rendering caches by terminal width. Keys 1–9 reach the first nine rows only. Up and Down stop at the first and last rows. Large choice lists have no explicit scrolling or filtering. The extension collects one question per call. Prompt guidance does not enforce question count, the context message, or recommendation order.
 
 ### Attribution
 

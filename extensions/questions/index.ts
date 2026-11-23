@@ -94,11 +94,11 @@ const OptionSchema = Type.Object({
 
 const AskUserQuestionParams = Type.Object({
 	question: Type.String({
-		description: "Ask exactly one direct question. Use plain words and aim for 25 words or fewer.",
+		description: "Ask exactly one direct question. Use plain words, aim for 25 words or fewer, and refer to the context message by a named subject.",
 	}),
 	details: Type.Optional(
 		Type.String({
-			description: "Optional context needed to answer. Prefer 1–2 short sentences and usually 50 words or fewer. Omit repeated background and option summaries. Preserve essential risks and conditions, even when they need more words.",
+			description: "Optional context the user must see while the dialog is open. Prefer 1–2 short sentences and usually 50 words or fewer. Write longer context in the message before the call. Omit details when the question and choices are clear. Preserve essential risks and conditions, even when they need more words.",
 		}),
 	),
 	options: Type.Optional(
@@ -124,7 +124,8 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Use this tool to ask exactly one clarifying question, missing-requirement question, preference question, or decision question before continuing.",
 		promptGuidelines: [
 			"Ask exactly one question per tool call.",
-			"Make each question self-contained. When referring to an earlier proposal, use a clear reference and briefly name the proposal. Do not rely only on positions such as 'option 2 above'.",
+			"Before the ask_user_question call, write one short message with the context the user needs to decide. State the facts, the trade-off, and any constraint. This message does not replace the tool call.",
+			"Keep the question and choices short, and refer to that message by a named subject. Do not rely only on positions such as 'option 2 above'. The question and choices must still make sense when the message has scrolled away.",
 			"Treat an answer as authorization only for the action explicitly asked about. Selecting an approach does not by itself authorize its execution. Cancellation, unavailable UI, and empty text do not imply approval.",
 			"If the user replies with a question or asks for clarification, answer it in prose and end the turn. For clarification replies, do not repeat or rephrase the pending decision in that turn, and wait for the user's next message.",
 			"If the user cancels a question, do not repeat or rephrase it unless the user requests it.",
@@ -132,7 +133,7 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			"Use STE100-inspired wording in questions, details, and choices: plain words, active voice, and one idea per sentence. Avoid jargon, filler, and semicolons.",
 			"Keep the question direct, usually 25 words or fewer. Give each choice a short label, usually 2–6 words.",
 			"Name the concrete change and its effect on the user. Do not refer to code identifiers, file paths, or a list position such as item 12 without naming the subject.",
-			"Omit details unless the user needs them to decide. Prefer 1–2 sentences and usually 50 words or fewer. Explain only why the decision matters or a key constraint. Do not repeat the question, prior discussion, or choice descriptions.",
+			"Use details only for the context the user must see while the dialog is open. Prefer 1–2 short sentences and usually 50 words or fewer. Write longer context in the message before the tool call. Omit details when the question and choices are clear.",
 			"Use at most one short sentence for each choice description. State its main benefit or trade-off. Omit descriptions that repeat labels.",
 			"Preserve essential risks, conditions, uncertainty, and technical names. Use more words when needed for a safe, informed choice. Never truncate text to meet a length target.",
 			"Ask only questions that materially affect the work. Use separate calls for distinct decisions, and avoid unnecessary follow-up questions.",
@@ -140,7 +141,7 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 			'For a single-select question, the user can select one option, custom text, or both together.',
 			"Use multiSelect: true when options are independent and any combination can be valid. Keep options as distinct answers; do not fold their combinations into additional options.",
 			"Express related decisions as separate options in one multi-select, or as separate questions in separate calls. Do not pre-combine decision dimensions into options.",
-			'Present neutral options and let the user analyze them. Do not mark or order options by preference. In details, state only facts: applicable project rules, constraints, and what each option changes.',
+			'Present neutral options and let the user analyze them. Do not mark or order options by preference. In the context message and details, state only facts: applicable project rules, constraints, and what each option changes.',
 			"Use reasonable defaults for minor choices. Ask when an assumption would materially affect correctness, scope, safety, or user intent.",
 			"Use this tool when multiple valid implementation paths exist and the preferred path depends on user choice.",
 		].map((guideline) => `ask_user_question: ${guideline}`),

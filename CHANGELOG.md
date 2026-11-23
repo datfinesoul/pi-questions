@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-23
+
+### Changed
+
+- Tell the model to write one short context message before the question and refer to it by a named subject. The message carries the facts, the trade-off, and the constraint. The dialog keeps the question and choices short.
+- Limit `details` to the context the user must see while the dialog is open. Longer context belongs in the message before the call.
+- Add the context-message allowance to the decision-rule block. The block still forbids listing open decisions as prose.
+
 ## [0.6.0] - 2026-11-22
 
 ### Added
