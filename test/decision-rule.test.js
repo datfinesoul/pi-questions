@@ -63,12 +63,15 @@ test("rule block is created, appended, replaced, and left alone when current", (
   });
 });
 
-test("the decision rule permits prose and waiting after clarification or cancellation", () => {
+test("the decision rule limits interruptions and preserves clarification and cancellation guidance", () => {
   assert.equal(buildRuleBlock(), [
     RULE_START,
     "## Decision questions",
     "",
-    "When the next step depends on a choice, call the `ask_user_question` tool before you continue, unless an exception below applies.",
+    "Use `ask_user_question` only when missing information or an unresolved user decision materially affects the work.",
+    "Do not ask the user to confirm a clear read-only request.",
+    "Do not ask the user to repeat a decision they already made.",
+    "Follow any separate access or approval requirements.",
     "Do not list open decisions as prose, except as allowed below.",
     "Write one short message before the tool call with the context the user needs to decide. It does not replace the tool call.",
     "Ask one question per tool call.",
@@ -186,8 +189,8 @@ test("a recorded decision refreshes the previous rule and preserves surrounding 
     RULE_START,
     "## Decision questions",
     "",
-    "When the next step depends on a choice, call the `ask_user_question` tool before you continue.",
-    "Do not list open decisions as prose.",
+    "When the next step depends on a choice, call the `ask_user_question` tool before you continue, unless an exception below applies.",
+    "Do not list open decisions as prose, except as allowed below.",
     "Ask one question per tool call.",
     "Give options when the choices are known.",
     "",

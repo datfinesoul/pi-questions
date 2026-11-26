@@ -5,7 +5,7 @@ import { Type } from "typebox";
 import type { AskUserQuestionMode, AskUserQuestionResultDetails } from "./types.ts";
 import { askText, askChoice } from "./ui.ts";
 import { normalizeOptions, getOtherLabel, cancelledResult, unavailableResult, buildResult, withUILock } from "../../src/questions.ts";
-import { installRuleBlock, readConfig, writeConfig } from "../../src/decision-rule.ts";
+import { CONFIRMATION_GUIDELINES, installRuleBlock, readConfig, writeConfig } from "../../src/decision-rule.ts";
 
 const RULE_YES = "Yes";
 const RULE_NO = "No";
@@ -121,9 +121,10 @@ export default function askUserQuestion(pi: ExtensionAPI) {
 		description:
 			"Ask the user one focused question and wait for their answer. Use this when missing information or a user decision materially affects the work. Avoid interrupting for minor choices that have a reasonable default.",
 		promptSnippet:
-			"Use this tool to ask exactly one clarifying question, missing-requirement question, preference question, or decision question before continuing.",
+			"Ask one focused question when missing information or an unresolved user decision materially affects the work.",
 		promptGuidelines: [
 			"Ask exactly one question per tool call.",
+			...CONFIRMATION_GUIDELINES,
 			"Before the ask_user_question call, write one short message with the context the user needs to decide. State the facts, the trade-off, and any constraint. This message does not replace the tool call.",
 			"Keep the question and choices short, and refer to that message by a named subject. Do not rely only on positions such as 'option 2 above'. The question and choices must still make sense when the message has scrolled away.",
 			"Treat an answer as authorization only for the action explicitly asked about. Selecting an approach does not by itself authorize its execution. Cancellation, unavailable UI, and empty text do not imply approval.",

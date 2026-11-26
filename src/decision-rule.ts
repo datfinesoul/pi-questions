@@ -14,11 +14,18 @@ export type DecisionRule = "on" | "off";
 export type Settings = { decisionRule?: DecisionRule };
 export type UpsertAction = "created" | "appended" | "replaced" | "unchanged" | "invalid";
 
+export const CONFIRMATION_GUIDELINES = [
+  "Do not ask the user to confirm a clear read-only request.",
+  "Do not ask the user to repeat a decision they already made.",
+  "Follow any separate access or approval requirements.",
+] as const;
+
 const RULE_LINES = [
   RULE_START,
   "## Decision questions",
   "",
-  "When the next step depends on a choice, call the `ask_user_question` tool before you continue, unless an exception below applies.",
+  "Use `ask_user_question` only when missing information or an unresolved user decision materially affects the work.",
+  ...CONFIRMATION_GUIDELINES,
   "Do not list open decisions as prose, except as allowed below.",
   "Write one short message before the tool call with the context the user needs to decide. It does not replace the tool call.",
   "Ask one question per tool call.",

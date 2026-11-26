@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-26
+
+### Fixed
+
+- Tell the model not to ask for confirmation of clear read-only requests or decisions the user already made. Keep separate access and approval requirements in effect.
+
 ## [0.7.0] - 2026-11-23
 
 ### Changed
