@@ -122,6 +122,8 @@ Delete the file to make the extension offer the rule again.
 
 ### The rule block
 
+The rule limits questions to missing information or unresolved decisions that materially affect the work. It tells the model not to ask for confirmation of a clear read-only request. Separate access and approval requirements still apply.
+
 The extension owns only the text between two markers:
 
 ```markdown

@@ -30,6 +30,13 @@ test('tool guidance puts decision context before the call and keeps references c
   assert.match(guidance, /Selecting an approach does not by itself authorize its execution/);
   assert.match(guidance, /Cancellation, unavailable UI, and empty text do not imply approval/);
 });
+test('tool guidance discourages redundant confirmation without waiving separate approvals', () => {
+  const guidance = tool.promptGuidelines.join('\n');
+  assert.match(tool.promptSnippet, /missing information or an unresolved user decision materially affects the work/);
+  assert.match(guidance, /Do not ask the user to confirm a clear read-only request\./);
+  assert.match(guidance, /Do not ask the user to repeat a decision they already made\./);
+  assert.match(guidance, /Follow any separate access or approval requirements\./);
+});
 test('tool guidance allows clarification without another decision question', () => {
   const guidance = tool.promptGuidelines.join('\n');
   assert.match(guidance, /If the user replies with a question or asks for clarification, answer it in prose and end the turn\./);
